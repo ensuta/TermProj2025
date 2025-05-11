@@ -47,7 +47,7 @@ public class Player {
     }
 
     public void drawPlayer(Graphics g) {
-        g.setColor(Color.red);
+        g.setColor(Color.blue);
         int[] x_poly = {x_pos, x_pos - 10, x_pos, x_pos + 10};
         int[] y_poly = {y_pos, y_pos + 15, y_pos + 10, y_pos + 15};
         g.fillPolygon(x_poly, y_poly, 4);
