@@ -13,14 +13,14 @@ import java.awt.Color;
  */
 public class Enemy {
 
-    private float x_pos;
-    private float y_pos;
-    private float delta_x;
-    private float delta_y;
-    private int max_x;
-    private int max_y;
-    private float delta_y_inc;
-    private final int collision_distance = 10;
+    float x_pos;
+    float y_pos;
+    float delta_x;
+    float delta_y;
+    int max_x;
+    int max_y;
+    float delta_y_inc;
+    final int collision_distance = 10;
 
     public Enemy(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc) {
         x_pos = x;
