@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package shootingspaceship;
 import java.awt.Graphics;
 import java.awt.Color;
@@ -44,7 +41,7 @@ public class Shot {
     }
     
 
-    public boolean isAlive() { //총알 생존 여부
+    public boolean isAlive() { 
     	return alive;
     }
 }
