@@ -1,18 +1,13 @@
 package shootingspaceship;
-import java.util.*;
-import java.io.*;
-
-import java.awt.Graphics;
-import java.awt.Color;
-
 
 public class StageManager {
-    private int currentStage = 1; //현재 스테이지
-    private final int maxStage = 4; //마지막 스테이지
+    //스테이지 설정
+    private int currentStage = 1; 
+    private int maxStage = 5;
 
     // 각 스테이지별 설정값
-    private final int[] enemiesPerStage = {3, 5, 7, 10}; //스테이지 별 적 수
-    private final int[] bossHealthPerStage = {20, 30, 40, 50}; //스테이지 별 보스 피 
+    private final int[] enemiesPerStage = {5, 10, 15, 20}; 
+    private final int[] bossHealthPerStage = {20, 30, 40, 50, 60}; //스테이지 별 보스 피 
     private final float[] bossSpeedPerStage = {0.2f, 0.4f, 0.6f, 0.8f}; //스테이지 별 보스 속도
 
     public int getCurrentStage() {
@@ -20,7 +15,7 @@ public class StageManager {
     }
 
     public int getEnemyCountForStage() {
-        return enemiesPerStage[currentStage - 1]; //스테이지 넘어갈 때마다 적 수 많아지게 하는 함수
+        return enemiesPerStage[currentStage - 1]; //스테이지 넘어갈 때마다 bossthreshold 값 증가
     }
 
     public int getBossHealthForStage() {
@@ -36,7 +31,7 @@ public class StageManager {
     }
 
     public boolean advanceStage() {
-        if (currentStage < maxStage) { //스테이지 값 추가되도
+        if (currentStage < maxStage) { //다음 스테이지로
             currentStage++;
             return true;
         } else {
