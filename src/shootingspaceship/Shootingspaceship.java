@@ -52,6 +52,7 @@ class Boss extends Enemy {
     
 }
 
+
 public class Shootingspaceship extends JPanel implements Runnable {
 
     private Thread th;
@@ -78,9 +79,9 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private Graphics dbg;
     private Random rand;
     private int maxShotNum = 20;
+
     private boolean bossAppear = false;	// 보스 등장 여부 플래그
     private int bossThreshold = 3; // 특정 수의 적을 처치하면 보스 등장
-    
     
     public Shootingspaceship() {
         setBackground(Color.black);
@@ -104,6 +105,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private class addANewEnemy implements ActionListener {
 
         public void actionPerformed(ActionEvent e) {
+
             if (!bossAppear && ++enemySize <= maxEnemySize) { //만약 보스가 없고 적이 maxEnemySize보다 적을 때
                 float downspeed;
                 do {
@@ -114,12 +116,14 @@ public class Shootingspaceship extends JPanel implements Runnable {
                 //System.out.println("enemySize=" + enemySize + " downspeed=" + downspeed + " horspeed=" + horspeed);
                 Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
                 enemies.add(newEnemy);
+              
             } else if (!bossAppear && enemySize >= bossThreshold) {	//만약 보스가 없고 적 수가 보스등장조건보다 많을 때
             	spawnBoss();
-                timer.stop();
+              timer.stop();
             }
         }
     }
+
     private void spawnBoss() {	//보스 생성 함수
         boss = new Boss(width / 2, 50, 0.5f, 0.2f, width, height, 0.05f);
         bossAppear = true;
@@ -281,6 +285,16 @@ public class Shootingspaceship extends JPanel implements Runnable {
             enemy.draw(g);
             if (enemy.isCollidedWithShot(shots)) {
                 enemyList.remove();
+                
+                if(!bossAppear) {
+                	bossThreshold--;
+                	System.out.println("남은 처치 조건: " +bossThreshold);
+                	
+                	if(bossThreshold <= 0 && enemies.isEmpty() && !bossAppear) {
+                		spawnBoss();
+                		timer.stop();
+                	}
+                }
             }
             if (enemy.isCollidedWithPlayer(player)) {
                 enemyList.remove();
@@ -288,17 +302,34 @@ public class Shootingspaceship extends JPanel implements Runnable {
             }
         }
         
+
+        if(boss != null) {
+        	boss.move();
+        	
+        	if(boss.isCollidedWithShot(shots)) {
+        		if(boss.getHealth() <= 0 ) {
+        			boss = null;
+        			bossAppear = false;
+        			System.out.println("보스 처치!");
+        		}
+        	}
+        	
+        	if(boss.isCollidedWithPlayer(player)) {
+        		boss = null;
+        		System.exit(0);
+        	}
         // 보스 그리기
         if (boss != null) {
         	boss.draw(g);
         }
-
         // draw shots
         for (int i = 0; i < shots.length; i++) {
             if (shots[i] != null) {
                 shots[i].drawShot(g);
             }
         }
+        
+        
     }
 
     /**
@@ -315,3 +346,4 @@ public class Shootingspaceship extends JPanel implements Runnable {
         ship.start();
     }
 }
+

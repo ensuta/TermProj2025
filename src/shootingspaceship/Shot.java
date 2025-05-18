@@ -48,6 +48,7 @@ public class Shot {
         alive = false;
     }
     
+
     public boolean isAlive() { //총알 생존 여부
     	return alive;
     }
