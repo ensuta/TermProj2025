@@ -122,6 +122,10 @@ class Boss extends Enemy {
         this.health--;
     }
     
+    public void setHealth(int health) {
+        this.health = health;
+    }
+    
     @Override
     public void draw(Graphics g) {//boss
     	if(enemyImage != null) {
