@@ -5,12 +5,14 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.util.*;
 
+
 public class Shootingspaceship extends JPanel implements Runnable {
 
     private Thread th;
     private Player player;
     private Shot[] shots;
     private ArrayList enemies;
+    private Boss boss = null;
     private final int shotSpeed = -2;
     private final int playerLeftSpeed = -2;
     private final int playerRightSpeed = 2;
@@ -30,6 +32,10 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private Graphics dbg;
     private Random rand;
     private int maxShotNum = 20;
+    
+    private boolean bossAppear = false;	// 보스 등장 여부 플래그
+    private int bossThreshold = 3; // 특정 수의 적을 처치하면 보스 등장
+    
 
     public Shootingspaceship() {
         setBackground(Color.black);
@@ -53,7 +59,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private class addANewEnemy implements ActionListener {
 
         public void actionPerformed(ActionEvent e) {
-            if (++enemySize <= maxEnemySize) {
+            if (!bossAppear && ++enemySize <= maxEnemySize) {
                 float downspeed;
                 do {
                     downspeed = rand.nextFloat() * enemyMaxDownSpeed;
@@ -61,15 +67,19 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
                 float horspeed = rand.nextFloat() * 2 * enemyMaxHorizonSpeed - enemyMaxHorizonSpeed;
                 //System.out.println("enemySize=" + enemySize + " downspeed=" + downspeed + " horspeed=" + horspeed);
-
                 Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
                 enemies.add(newEnemy);
-            } else {
+            } else if(!bossAppear && enemySize >= bossThreshold) {
                 timer.stop();
             }
         }
     }
 
+    private void spawnBoss() {
+    	boss = new Boss(width / 2, 50, 0.5f, 02f, width, height, 0.05f);
+    	bossAppear = true;
+    }
+    
     private class ShipControl implements KeyListener {
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
@@ -177,19 +187,51 @@ public class Shootingspaceship extends JPanel implements Runnable {
             enemy.draw(g);
             if (enemy.isCollidedWithShot(shots)) {
                 enemyList.remove();
+                
+                if(!bossAppear) {
+                	bossThreshold--;
+                	System.out.println("남은 처치 조건: " +bossThreshold);
+                	
+                	if(bossThreshold <= 0 && enemies.isEmpty() && !bossAppear) {
+                		spawnBoss();
+                		timer.stop();
+                	}
+                }
             }
             if (enemy.isCollidedWithPlayer(player)) {
                 enemyList.remove();
                 System.exit(0);
             }
         }
+        
+        if(boss != null) {
+        	boss.move();
+        	
+        	if(boss.isCollidedWithShot(shots)) {
+        		if(boss.getHealth() <= 0 ) {
+        			boss = null;
+        			bossAppear = false;
+        			System.out.println("보스 처치!");
+        		}
+        	}
+        	
+        	if(boss.isCollidedWithPlayer(player)) {
+        		boss = null;
+        		System.exit(0);
+        	}
+        }
 
+        if (boss != null) {
+        	boss.draw(g);
+        }
         // draw shots
         for (int i = 0; i < shots.length; i++) {
             if (shots[i] != null) {
                 shots[i].drawShot(g);
             }
         }
+        
+        
     }
 
     /**
@@ -206,3 +248,4 @@ public class Shootingspaceship extends JPanel implements Runnable {
         ship.start();
     }
 }
+

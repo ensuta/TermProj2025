@@ -47,4 +47,8 @@ public class Shot {
     public void collided() {
         alive = false;
     }
+    
+    public boolean isAlive() {
+    	return alive;
+    }
 }

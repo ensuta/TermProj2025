@@ -6,12 +6,6 @@ package shootingspaceship;
 
 import java.awt.Graphics;
 import java.awt.Color;
-/**
- *
- * @author wgpak
- */
-import java.awt.Graphics;
-import java.awt.Color;
 
 public class Player {
     private int x_pos;
