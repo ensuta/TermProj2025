@@ -3,7 +3,6 @@
  * and open the template in the editor.
  */
 package shootingspaceship;
-
 import java.awt.Graphics;
 import java.awt.Color;
 import javax.imageio.ImageIO;
@@ -11,10 +10,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.File;
 
-/**
- *
- * @author wgpak
- */
 public class Enemy {
 
     float x_pos;

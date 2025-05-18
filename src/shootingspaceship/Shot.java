@@ -3,14 +3,9 @@
  * and open the template in the editor.
  */
 package shootingspaceship;
-
 import java.awt.Graphics;
 import java.awt.Color;
 
-/**
- *
- * @author wgpak
- */
 public class Shot {
 
     private int x_pos;

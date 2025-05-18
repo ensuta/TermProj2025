@@ -255,6 +255,11 @@ public class Shootingspaceship extends JPanel implements Runnable {
             }
         }
         
+        for (int i = 0; i < shots.length; i++) {
+            if (shots[i] != null) {
+                shots[i].drawShot(g);
+            }
+        }
 
         if(boss != null) {
         	boss.move();
