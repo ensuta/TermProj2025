@@ -11,7 +11,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private Thread th;
     private Player player;
     private Shot[] shots;
-    private ArrayList enemies;
+    private ArrayList<Enemy> enemies;
     private Boss boss = null; // 보스 객체
     private final int shotSpeed = -2;
     private final int playerLeftSpeed = -2;
@@ -35,13 +35,16 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
     private boolean bossAppear = false;	// 보스 등장 여부 플래그
     private int bossThreshold = 3; // 특정 수의 적을 처치하면 보스 등장
+    private StageManager stageManager; // 추가
     
     public Shootingspaceship() {
+        stageManager = new StageManager(); // 추가
+        bossThreshold = stageManager.getEnemyCountForStage(); // 스테이지별 적 처치 목표
         setBackground(Color.black);
         setPreferredSize(new Dimension(width, height));
         player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin );
         shots = new Shot[ maxShotNum ];
-        enemies = new ArrayList();
+        enemies = new ArrayList<Enemy>();
         enemySize = 0;
         rand = new Random(1);
         timer = new javax.swing.Timer(enemyTimeGap, new addANewEnemy());
@@ -78,7 +81,8 @@ public class Shootingspaceship extends JPanel implements Runnable {
     }
 
     private void spawnBoss() {	//보스 생성 함수
-        boss = new Boss(width / 2, 50, 0.5f, 0.2f, width, height, 0.05f);
+        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f);
+        boss.setHealth(stageManager.getBossHealthForStage());
         bossAppear = true;
     }
     
@@ -145,36 +149,33 @@ public class Shootingspaceship extends JPanel implements Runnable {
             }
 
          // 적 리스트를 순회하며 각 적에 대한 처리
+            boolean needClearEnemies = false;
+
             Iterator<Enemy> enemyList = enemies.iterator();
             while (enemyList.hasNext()) {
-                Enemy enemy = enemyList.next(); // 다음 적 객체를 가져옴
+                Enemy enemy = enemyList.next();
+                enemy.move();
 
-                enemy.move(); // 적을 이동시킴 (Enemy 클래스 내 move() 메소드 호출)
-
-                // 적과 총알의 충돌 여부 확인
                 if (enemy.isCollidedWithShot(shots)) {
-                    // 충돌이 발생했다면
-                    enemyList.remove(); // 적 리스트에서 현재 적을 제거 (Iterator의 remove() 사용)
-
-                    // 보스가 아직 등장하지 않았다면
+                    enemyList.remove();
                     if (!bossAppear) {
-                        bossThreshold--; // 보스 등장 조건 카운트 감소
+                        bossThreshold--;
                         System.out.println("남은 처치 조건: " + bossThreshold);
-
-                        // 보스 등장 조건이 충족되고, 적 리스트가 비어 있으며, 보스가 아직 등장하지 않았다면
-                        if (bossThreshold <= 0 && enemies.isEmpty() && !bossAppear) {
-                            spawnBoss(); // 보스를 생성하는 메소드 호출
-                            timer.stop(); // 일반 적 생성 타이머 중지
+                        if (bossThreshold <= 0 && !bossAppear) {
+                            needClearEnemies = true;
+                            spawnBoss();
+                            timer.stop();
                         }
                     }
                 }
-
-                // 적과 플레이어의 충돌 여부 확인
                 if (enemy.isCollidedWithPlayer(player)) {
-                    // 충돌이 발생했다면
-                    enemyList.remove(); // 적 리스트에서 현재 적을 제거
-                    System.exit(0); // 게임 종료
+                    enemyList.remove();
+                    System.exit(0);
                 }
+            }
+
+            if (needClearEnemies) {
+                enemies.clear(); 
             }
 
             // 보스가 존재한다면
@@ -188,7 +189,17 @@ public class Shootingspaceship extends JPanel implements Runnable {
                         boss = null; // 보스 객체를 null로 설정하여 제거
                         bossAppear = false; // 보스 등장 상태를 false로 변경
                         System.out.println("보스 처치!");
-                        // 게임 클리어 로직 추가 가능
+                        
+                        if (!stageManager.isFinalStage()) {
+                            stageManager.advanceStage();
+                            System.out.println("다음 스테이지로 진행: " + stageManager.getCurrentStage());
+                            bossThreshold = stageManager.getEnemyCountForStage();
+                            enemySize = 0;
+                            enemies.clear();
+                            timer.start();
+                        } else {
+                            JOptionPane.showMessageDialog(this, "게임 클리어!");
+                        }
                     }
                 }
 
@@ -232,7 +243,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         // draw player
         player.drawPlayer(g);
 
-        Iterator enemyList = enemies.iterator();
+        Iterator<Enemy> enemyList = enemies.iterator();
         while (enemyList.hasNext()) {
             Enemy enemy = (Enemy) enemyList.next();
             enemy.draw(g);
@@ -269,6 +280,17 @@ public class Shootingspaceship extends JPanel implements Runnable {
         			boss = null;
         			bossAppear = false;
         			System.out.println("보스 처치!");
+
+        			if (!stageManager.isFinalStage()) {
+        				stageManager.advanceStage();
+        				System.out.println("다음 스테이지로 진행: " + stageManager.getCurrentStage());
+        				bossThreshold = stageManager.getEnemyCountForStage();
+        				enemySize = 0;
+        				enemies.clear();
+        				timer.start();
+        			} else {
+        				JOptionPane.showMessageDialog(this, "게임 클리어!");
+        			}
         		}
         	}
         	
@@ -287,13 +309,15 @@ public class Shootingspaceship extends JPanel implements Runnable {
             }
         }
      } 
+    	
+    	g.setColor(Color.WHITE);
+        g.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
    }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
         JFrame frame = new JFrame("Shooting");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Shootingspaceship ship = new Shootingspaceship();
