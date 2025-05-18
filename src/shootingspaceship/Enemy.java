@@ -28,6 +28,7 @@ public class Enemy {
     BufferedImage enemyImage;
     private static final String IMAGE_PATH = "/Users/onbln_1/Downloads/babyshark_64x64.png";
 
+
     public Enemy(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc) {
         x_pos = x;
         y_pos = y;
