@@ -19,15 +19,9 @@ public class Boss extends Enemy {
             e.printStackTrace(); 
         }
     }
-
     public int getHealth() {    // 현재 체력 반환
         return health;
     }
-
-    public void decreaseHealth() {    // 체력을 1 감소
-        this.health--;
-    }
-
     public void setHealth(int health) { // 체력 직접 설정
         this.health = health;
     }
@@ -38,7 +32,9 @@ public class Boss extends Enemy {
             int imgW = bossImage.getWidth(); 
             int imgH = bossImage.getHeight(); 
             g.drawImage(bossImage, (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null); 
+            g.setColor(bossColor);
             g.drawString("Health: " + health, (int) x_pos - 20, (int) y_pos - 10); 
+            
         }else { // 이미지가 없으면, 아마 의미없음
             g.setColor(bossColor); 
             int[] x_poly = {(int) x_pos, (int) x_pos - 15, (int) x_pos, (int) x_pos + 15}; 
@@ -59,7 +55,7 @@ public class Boss extends Enemy {
             if (-collision_distance * 2 <= (y_pos - shot.getY()) && (y_pos - shot.getY() <= collision_distance * 2)) {
                 if (-collision_distance * 2 <= (x_pos - shot.getX()) && (x_pos - shot.getX() <= collision_distance * 2)) {
                     shot.collided(); 
-                    decreaseHealth(); 
+                    this.health -= shot.getDamage(); // Shot의 데미지만큼 감소
                     return health <= 0;
                 }
             }

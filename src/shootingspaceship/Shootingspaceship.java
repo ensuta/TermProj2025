@@ -34,13 +34,20 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     //적
     private final int enemyMaxDownSpeed = 1;
     private final int enemyMaxHorizonSpeed = 1;
-    private final float enemyDownSpeedInc = 0.3f;//적수직속도 증가량
+    private final float enemyDownSpeedInc = 0.5f;//적수직속도 증가량
     //적 난이도?
-    private final int enemyTimeGap = 1000;
-    private final int maxEnemySize = 10;
+    private final int enemyTimeGap = 500;
+    private final int maxEnemySize = 20;
     // 보스 등장 관련
     private boolean bossAppear = false;
     private int bossThreshold;
+
+    // 총알 연사 관련
+    private boolean shooting = false;
+    private long lastShotTime = 0;
+    private int shotInterval = 50; // 총알 발사 간격
+
+    
 
     public Shootingspaceship() {//생성자
         stageManager = new StageManager(); 
@@ -77,12 +84,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                     playerMoveRight = true;
                     break;
                 case KeyEvent.VK_UP:
-                    for (int i = 0; i < shots.length; i++) {
-                        if (shots[i] == null) {
-                            shots[i] = player.generateShot();
-                            break;
-                        }
-                    }
+                    shooting = true;
                     break;
             }
         }
@@ -95,6 +97,9 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 case KeyEvent.VK_RIGHT:
                     playerMoveRight = false;
                     break;
+                case KeyEvent.VK_UP:
+                    shooting = false;
+                    break;
             }
         }
 
@@ -105,7 +110,8 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
 
     private class addANewEnemy implements ActionListener {//적 생성
         public void actionPerformed(ActionEvent e) {
-            if (!bossAppear && enemySize <= maxEnemySize) {
+            if (!bossAppear && enemySize < maxEnemySize) {
+                // 적 생성
                 //속도설정
                 float downspeed;
                 do {
@@ -132,6 +138,18 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
         while (true) {
+            if (shooting) {
+                long now = System.currentTimeMillis();
+                if (now - lastShotTime > shotInterval) {
+                    for (int i = 0; i < shots.length; i++) {
+                        if (shots[i] == null) {
+                            shots[i] = player.generateShot();
+                            lastShotTime = now;
+                            break;
+                        }
+                    }
+                }
+            }
             // 총알 이동, 밖으로 나간 총알 제거
             for (int i = 0; i < shots.length; i++) {
                 if (shots[i] != null) {
@@ -166,6 +184,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                             needClearEnemies = true;
                             spawnBoss();
                             timer.stop();
+                            break; 
                         }
                     }
                 }
