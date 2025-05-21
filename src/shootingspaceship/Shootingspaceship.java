@@ -105,7 +105,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
 
     private class addANewEnemy implements ActionListener {//적 생성
         public void actionPerformed(ActionEvent e) {
-            if (!bossAppear && ++enemySize <= maxEnemySize) {
+            if (!bossAppear && enemySize <= maxEnemySize) {
                 //속도설정
                 float downspeed;
                 do {
@@ -116,10 +116,8 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 //최종출력
                 Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
                 enemies.add(newEnemy);
+                ++enemySize;
 
-            } else if (!bossAppear && enemySize >= bossThreshold) {//보스 등장시 일반몹 중지
-                spawnBoss();
-                timer.stop();
             }
         }
     }
@@ -161,6 +159,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                     enemyList.remove();
                     if (!bossAppear) {
                         --bossThreshold;
+                        --enemySize;
                         System.out.println("남은 보스 등장 처치 조건: " + bossThreshold);
                         //보스등장
                         if (bossThreshold <= 0 && !bossAppear) {
