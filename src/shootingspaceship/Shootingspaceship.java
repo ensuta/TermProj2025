@@ -1,5 +1,7 @@
 package shootingspaceship;
 
+import javax.imageio.ImageIO;
+import java.io.IOException;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
@@ -46,7 +48,9 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     private boolean shooting = false;
     private long lastShotTime = 0;
     private int shotInterval = 50; // 총알 발사 간격
-
+    
+    //배경 이미지
+    private Image backgroundImg;
     
 
     public Shootingspaceship() {//생성자
@@ -66,7 +70,11 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         setPreferredSize(new Dimension(width, height)); // game size
         player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin ); // 플레이어 생성
 
-
+        try {
+        	backgroundImg = ImageIO.read(getClass().getResource("/shootingspaceship/Image/gamesky.jpg"));
+        } catch (IOException e) {
+        	e.printStackTrace();
+        }
     }
 
     public void start() {//루프시작
@@ -128,16 +136,37 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         }
     }
     private void spawnBoss() {
-        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f);
+    	// 스테이지별 이미지 설정
+    	int stage = stageManager.getCurrentStage();
+    	// 이미지 깨질 때 대신 나오는 이미지
+    	String bossImagePath = "missing.png";
+    	// stage 별 나올 보스 이미지
+    	switch (stage) {
+    	case 1:
+    		bossImagePath = "shark_128x128.png";
+    		break;
+    	case 2:
+    		bossImagePath = "crocodiro.png";
+    		break;
+    	case 3:
+    		bossImagePath = "tung.png";
+    		break;
+    	default:
+    		bossImagePath = "missing.png";
+    		break;
+    	}
+        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath);
         boss.setHealth(stageManager.getBossHealthForStage());
+        
         bossAppear = true;
     }
 
-
+    
     public void run() { //루프
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
         while (true) {
+        	// 총알 이동, 밖으로 나간 총알 제거
             if (shooting) {
                 long now = System.currentTimeMillis();
                 if (now - lastShotTime > shotInterval) {
