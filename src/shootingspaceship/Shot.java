@@ -1,4 +1,3 @@
-
 package shootingspaceship;
 import java.awt.Graphics;
 import java.awt.Color;
@@ -9,11 +8,20 @@ public class Shot {
     private int y_pos;
     private boolean alive;
     private final int radius = 3;
+    private int damage = 1; // 기본 데미지
 
     public Shot(int x, int y) {
         x_pos = x;
         y_pos = y;
         alive = true;
+    }
+
+    
+    public Shot(int x, int y, int damage) {
+        x_pos = x;
+        y_pos = y;
+        alive = true;
+        this.damage = damage;
     }
 
     public int getY() {
@@ -43,5 +51,9 @@ public class Shot {
 
     public boolean isAlive() { 
     	return alive;
+    }
+
+    public int getDamage() {
+        return damage;
     }
 }

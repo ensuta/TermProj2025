@@ -35,9 +35,7 @@ public class Player {
     }
 
     public Shot generateShot() {
-        Shot shot = new Shot(x_pos, y_pos);
-
-        return shot;
+        return new Shot(x_pos, y_pos, 5);
     }
 
     public void drawPlayer(Graphics g) {
