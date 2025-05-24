@@ -1,75 +1,24 @@
 package shootingspaceship;
 
+import javax.imageio.ImageIO;
+import java.io.IOException;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
 
-class Boss extends Enemy {
-	private int health;
-    private final int initialHealth = 20; // 보스의 초기 체력
-    private final Color bossColor = Color.RED; // 보스의 색상
 
-	Boss(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc){
-		super(x, y, delta_x, delta_y, max_x, max_y, delta_y_inc); //super로 생성자 상속
-		this.health = initialHealth;
-	}
-	
-	public int getHealth() {	//현재 체력을 보여주는 함수
-        return health;
-    }
+public class Shootingspaceship extends JPanel implements Runnable {//게임클래스
 
-    public void decreaseHealth() {	//체력을 깎는 함수
-        this.health--;
-    }
-    
-    @Override
-    public void draw(Graphics g) {	//boss와 체력바 그리기
-        g.setColor(bossColor);
-        int[] x_poly = {(int) x_pos, (int) x_pos - 15, (int) x_pos, (int) x_pos + 15};
-        int[] y_poly = {(int) y_pos + 20, (int) y_pos, (int) y_pos + 15, (int) y_pos};
-        g.fillPolygon(x_poly, y_poly, 4);
-        g.setColor(Color.WHITE);
-        g.drawString("Health: " + health, (int) x_pos - 20, (int) y_pos - 10);
-    }
-    
-    @Override
-    public boolean isCollidedWithShot(Shot[] shots) {	//만약 총알에 맞는다면
-        for (Shot shot : shots) {
-            if (shot == null || !shot.isAlive()) {
-                continue;
-            }
-            if (-collision_distance * 2 <= (y_pos - shot.getY()) && (y_pos - shot.getY() <= collision_distance * 2)) {
-                if (-collision_distance * 2 <= (x_pos - shot.getX()) && (x_pos - shot.getX() <= collision_distance * 2)) {
-                    shot.collided();
-                    decreaseHealth();
-                    return health <= 0; // 체력이 0 이하이면 충돌로 간주하여 제거
-                }
-            }
-        }
-        return false;
-    }
-    
-}
-
-public class Shootingspaceship extends JPanel implements Runnable {
-
-    private Thread th;
+	private List<Bomb> activeBombs = new ArrayList<>();
     private Player player;
     private Shot[] shots;
-    private ArrayList enemies;
-    private Boss boss = null; // 보스 객체
-    private final int shotSpeed = -2;
-    private final int playerLeftSpeed = -2;
-    private final int playerRightSpeed = 2;
-    private final int width = 500;
-    private final int height = 500;
-    private final int playerMargin = 10;
-    private final int enemyMaxDownSpeed = 1;
-    private final int enemyMaxHorizonSpeed = 1;
-    private final int enemyTimeGap = 2000; //unit: msec
-    private final float enemyDownSpeedInc = 0.3f;
-    private final int maxEnemySize = 10;
+    private ArrayList<Enemy> enemies;
+    private Boss boss = null;
+
+    private Thread th;
     private int enemySize;
     private javax.swing.Timer timer;
     private boolean playerMoveLeft;
@@ -77,55 +26,71 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private Image dbImage;
     private Graphics dbg;
     private Random rand;
-    private int maxShotNum = 20;
-    private boolean bossAppear = false;	// 보스 등장 여부 플래그
-    private int bossThreshold = 3; // 특정 수의 적을 처치하면 보스 등장
+    private StageManager stageManager;
+
+    //각종 파라미터
+    private final int width = 500;
+    private final int height = 500;
+    //플레이어
+    private final int shotSpeed = -2;
+    private int maxShotNum = 10000;
+    private final int playerMargin = 10;
+    private final int playerLeftSpeed = -2;
+    private final int playerRightSpeed = 2;
+    //적
+    private final int enemyMaxDownSpeed = 1;
+    private final int enemyMaxHorizonSpeed = 1;
+    private final float enemyDownSpeedInc = 0.5f;//적수직속도 증가량
+    //적 난이도?
+    private final int enemyTimeGap = 500;
+    private final int maxEnemySize = 20;
+    // 보스 등장 관련
+    private boolean bossAppear = false;
+    private int bossThreshold;
+
+    // 총알 연사 관련
+    private boolean shooting = false;
+    private long lastShotTime = 0;
+    private int shotInterval = 50; // 총알 발사 간격
+    
+    //배경 이미지
+    private Image backgroundImg;
     
     
-    public Shootingspaceship() {
-        setBackground(Color.black);
-        setPreferredSize(new Dimension(width, height));
-        player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin );
-        shots = new Shot[ maxShotNum ];
-        enemies = new ArrayList();
-        enemySize = 0;
-        rand = new Random(1);
-        timer = new javax.swing.Timer(enemyTimeGap, new addANewEnemy());
-        timer.start();
-        addKeyListener(new ShipControl());
-        setFocusable(true);
+
+    public Shootingspaceship() {//생성자
+    	boss = new BombardiroCrocodilo(100, 50);
+        stageManager = new StageManager(); 
+        shots = new Shot[ maxShotNum ]; 
+        enemies = new ArrayList<Enemy>(); 
+        enemySize = 0; 
+        rand = new Random(1); 
+        timer = new javax.swing.Timer(enemyTimeGap, new addANewEnemy()); 
+        timer.start(); 
+        addKeyListener(new ShipControl()); 
+        setFocusable(true); 
+        bossThreshold = stageManager.getEnemyCountForStage(); // 보스등장조건
+
+
+        setBackground(Color.black); // background color
+        setPreferredSize(new Dimension(width, height)); // game size
+        player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin ); // 플레이어 생성
+
+        try {
+        	backgroundImg = ImageIO.read(getClass().getResource("/shootingspaceship/Image/gamesky.jpg"));
+        } catch (IOException e) {
+        	e.printStackTrace();
+        }
+        
+        
     }
 
-    public void start() {
+    public void start() {//루프시작
         th = new Thread(this);
         th.start();
     }
 
-    private class addANewEnemy implements ActionListener {
-
-        public void actionPerformed(ActionEvent e) {
-            if (!bossAppear && ++enemySize <= maxEnemySize) { //만약 보스가 없고 적이 maxEnemySize보다 적을 때
-                float downspeed;
-                do {
-                    downspeed = rand.nextFloat() * enemyMaxDownSpeed;
-                } while (downspeed == 0);
-
-                float horspeed = rand.nextFloat() * 2 * enemyMaxHorizonSpeed - enemyMaxHorizonSpeed;
-                //System.out.println("enemySize=" + enemySize + " downspeed=" + downspeed + " horspeed=" + horspeed);
-                Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
-                enemies.add(newEnemy);
-            } else if (!bossAppear && enemySize >= bossThreshold) {	//만약 보스가 없고 적 수가 보스등장조건보다 많을 때
-            	spawnBoss();
-                timer.stop();
-            }
-        }
-    }
-    private void spawnBoss() {	//보스 생성 함수
-        boss = new Boss(width / 2, 50, 0.5f, 0.2f, width, height, 0.05f);
-        bossAppear = true;
-    }
-    
-    private class ShipControl implements KeyListener {
+        private class ShipControl implements KeyListener {
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
@@ -135,13 +100,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
                     playerMoveRight = true;
                     break;
                 case KeyEvent.VK_UP:
-                    // generate new shot and add it to shots array
-                    for (int i = 0; i < shots.length; i++) {
-                        if (shots[i] == null) {
-                            shots[i] = player.generateShot();
-                            break;
-                        }
-                    }
+                    shooting = true;
                     break;
             }
         }
@@ -154,6 +113,9 @@ public class Shootingspaceship extends JPanel implements Runnable {
                 case KeyEvent.VK_RIGHT:
                     playerMoveRight = false;
                     break;
+                case KeyEvent.VK_UP:
+                    shooting = false;
+                    break;
             }
         }
 
@@ -161,157 +123,221 @@ public class Shootingspaceship extends JPanel implements Runnable {
         }
     }
 
-    public void run() {
-        //int c=0;
+
+    private class addANewEnemy implements ActionListener {//적 생성
+        public void actionPerformed(ActionEvent e) {
+            if (!bossAppear && enemySize < maxEnemySize) {
+                // 적 생성
+                //속도설정
+                float downspeed;
+                do {
+                    downspeed = rand.nextFloat() * enemyMaxDownSpeed;
+                } while (downspeed == 0);
+                float horspeed = rand.nextFloat() * 2 * enemyMaxHorizonSpeed - enemyMaxHorizonSpeed;
+
+                //최종출력
+                Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
+                enemies.add(newEnemy);
+                ++enemySize;
+
+            }
+        }
+    }
+    private void spawnBoss() {
+    	// 스테이지별 이미지 설정
+    	int stage = stageManager.getCurrentStage();
+    	// 이미지 깨질 때 대신 나오는 이미지
+    	String bossImagePath = "missing.png";
+    	// stage 별 나올 보스 이미지
+    	switch (stage) {
+    	case 1:
+    		bossImagePath = "shark_128x128.png";
+    		break;
+    	case 2:
+    		bossImagePath = "crocodiro.png";
+    		break;
+    	case 3:
+    		bossImagePath = "tung.png";
+    		break;
+    	default:
+    		bossImagePath = "missing.png";
+    		break;
+    	}
+        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath, stage);
+        boss.setHealth(stageManager.getBossHealthForStage());
+        
+        bossAppear = true;
+    }
+
+    
+    public void run() { //루프
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
         while (true) {
-            //System.out.println( ++c );
-            // do operations on shots in shots array
+        	// 총알 이동, 밖으로 나간 총알 제거
+            if (shooting) {
+                long now = System.currentTimeMillis();
+                if (now - lastShotTime > shotInterval) {
+                    for (int i = 0; i < shots.length; i++) {
+                        if (shots[i] == null) {
+                            shots[i] = player.generateShot();
+                            lastShotTime = now;
+                            break;
+                        }
+                    }
+                }
+            }
+            // 총알 이동, 밖으로 나간 총알 제거
             for (int i = 0; i < shots.length; i++) {
                 if (shots[i] != null) {
-                    // move shot
                     shots[i].moveShot(shotSpeed);
-
-                    // test if shot is out
                     if (shots[i].getY() < 0) {
-                        // remove shot from array
                         shots[i] = null;
                     }
                 }
             }
 
+            //이동 처리
             if (playerMoveLeft) {
                 player.moveX(playerLeftSpeed);
             } else if (playerMoveRight) {
                 player.moveX(playerRightSpeed);
             }
-
-         // 적 리스트를 순회하며 각 적에 대한 처리
+            boolean needClearEnemies = false;
             Iterator<Enemy> enemyList = enemies.iterator();
+
             while (enemyList.hasNext()) {
-                Enemy enemy = enemyList.next(); // 다음 적 객체를 가져옴
-
-                enemy.move(); // 적을 이동시킴 (Enemy 클래스 내 move() 메소드 호출)
-
-                // 적과 총알의 충돌 여부 확인
+                Enemy enemy = enemyList.next();
+                enemy.move();
+                //적제거
                 if (enemy.isCollidedWithShot(shots)) {
-                    // 충돌이 발생했다면
-                    enemyList.remove(); // 적 리스트에서 현재 적을 제거 (Iterator의 remove() 사용)
-
-                    // 보스가 아직 등장하지 않았다면
+                    enemyList.remove();
                     if (!bossAppear) {
-                        bossThreshold--; // 보스 등장 조건 카운트 감소
-                        System.out.println("남은 처치 조건: " + bossThreshold);
-
-                        // 보스 등장 조건이 충족되고, 적 리스트가 비어 있으며, 보스가 아직 등장하지 않았다면
-                        if (bossThreshold <= 0 && enemies.isEmpty() && !bossAppear) {
-                            spawnBoss(); // 보스를 생성하는 메소드 호출
-                            timer.stop(); // 일반 적 생성 타이머 중지
+                        --bossThreshold;
+                        --enemySize;
+                        System.out.println("남은 보스 등장 처치 조건: " + bossThreshold);
+                        //보스등장
+                        if (bossThreshold <= 0 && !bossAppear) {
+                            needClearEnemies = true;
+                            spawnBoss();
+                            timer.stop();
+                            break; 
                         }
                     }
                 }
-
-                // 적과 플레이어의 충돌 여부 확인
+                // 게임종료
                 if (enemy.isCollidedWithPlayer(player)) {
-                    // 충돌이 발생했다면
-                    enemyList.remove(); // 적 리스트에서 현재 적을 제거
-                    System.exit(0); // 게임 종료
+                    enemyList.remove();
+                    JOptionPane.showMessageDialog(this, "게임오버: 플레이어와 충돌");
+                    System.exit(0);
+                }
+                if (enemy.getY() >= height) {
+                    JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
+                    System.exit(0);
                 }
             }
+            if (needClearEnemies) {
+                enemies.clear();
+                enemySize = 0;
+            }
 
-            // 보스가 존재한다면
+
+
+
             if (boss != null) {
-                boss.move(); // 보스를 이동시킴 (Boss 클래스 내 move() 메소드 호출)
+                boss.move();
 
-                // 보스와 총알의 충돌 여부 확인
+                // 보스와 총알 충돌 시 체력 감소 및 보스 처치 처리
                 if (boss.isCollidedWithShot(shots)) {
-                    // 충돌이 발생했다면
                     if (boss.getHealth() <= 0) {
-                        boss = null; // 보스 객체를 null로 설정하여 제거
-                        bossAppear = false; // 보스 등장 상태를 false로 변경
+                        boss = null;
+                        bossAppear = false;
                         System.out.println("보스 처치!");
-                        // 게임 클리어 로직 추가 가능
+
+                        // 다음 스테이지로 진행
+                        if (!stageManager.isFinalStage()) {
+                            stageManager.advanceStage();
+                            JOptionPane.showMessageDialog(this, "다음 스테이지로 진행: " + stageManager.getCurrentStage());
+                            bossThreshold = stageManager.getEnemyCountForStage();
+                            enemySize = 0;
+                            enemies.clear();
+                            timer.start();
+                        } else {
+                            // 마지막 스테이지 클리어 시
+                            JOptionPane.showMessageDialog(this, "게임 클리어!");
+                        }
+                        continue;
                     }
                 }
 
-                // 보스와 플레이어의 충돌 여부 확인
+                // 게임종료
                 if (boss.isCollidedWithPlayer(player)) {
-                    boss = null; // 보스 객체를 null로 설정하여 제거
-                    System.exit(0); // 게임 종료
+                    JOptionPane.showMessageDialog(this, "게임오버: 보스가 플레이어와 충돌");
+                    System.exit(0);
+                }
+                if (boss.getY() >= height) {
+                    JOptionPane.showMessageDialog(this, "게임오버: 보스가 화면 아래에 도달");
+                    System.exit(0);
                 }
             }
 
             repaint();
-
             try {
-                Thread.sleep(10);
+                Thread.sleep(5); 
             } catch (InterruptedException ex) {
-                // do nothing
             }
 
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         }
     }
 
+
     public void initImage(Graphics g) {
         if (dbImage == null) {
             dbImage = createImage(this.getSize().width, this.getSize().height);
             dbg = dbImage.getGraphics();
         }
-
         dbg.setColor(getBackground());
         dbg.fillRect(0, 0, this.getSize().width, this.getSize().height);
 
         dbg.setColor(getForeground());
-        //paint (dbg);
 
         g.drawImage(dbImage, 0, 0, this);
     }
 
+
     public void paintComponent(Graphics g) {
+        // 각종 그리기
         initImage(g);
-
-        // draw player
         player.drawPlayer(g);
-
-        Iterator enemyList = enemies.iterator();
+        Iterator<Enemy> enemyList = enemies.iterator();
         while (enemyList.hasNext()) {
-            Enemy enemy = (Enemy) enemyList.next();
+            Enemy enemy = enemyList.next();
             enemy.draw(g);
-            if (enemy.isCollidedWithShot(shots)) {
-                enemyList.remove();
-            }
-            if (enemy.isCollidedWithPlayer(player)) {
-                enemyList.remove();
-                System.exit(0);
-            }
         }
-        
-        // 보스 그리기
-        if (boss != null) {
-        	boss.draw(g);
-        }
-
-        // draw shots
         for (int i = 0; i < shots.length; i++) {
             if (shots[i] != null) {
                 shots[i].drawShot(g);
             }
         }
+        if (boss != null) {
+            boss.draw(g);
+        }
+        // 스테이지 정보
+        g.setColor(Color.WHITE);
+        g.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
     }
 
-    /**
-     * @param args the command line arguments
-     */
+
     public static void main(String[] args) {
-        // TODO code application logic here
         JFrame frame = new JFrame("Shooting");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Shootingspaceship ship = new Shootingspaceship();
         frame.getContentPane().add(ship);
+        frame.setResizable(false);
         frame.pack();
         frame.setVisible(true);
+        frame.setLocationRelativeTo(null);
         ship.start();
     }
 }

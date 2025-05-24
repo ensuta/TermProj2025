@@ -1,27 +1,27 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package shootingspaceship;
-
 import java.awt.Graphics;
 import java.awt.Color;
 
-/**
- *
- * @author wgpak
- */
 public class Shot {
 
     private int x_pos;
     private int y_pos;
     private boolean alive;
     private final int radius = 3;
+    private int damage = 1; // 기본 데미지
 
     public Shot(int x, int y) {
         x_pos = x;
         y_pos = y;
         alive = true;
+    }
+
+    
+    public Shot(int x, int y, int damage) {
+        x_pos = x;
+        y_pos = y;
+        alive = true;
+        this.damage = damage;
     }
 
     public int getY() {
@@ -48,7 +48,12 @@ public class Shot {
         alive = false;
     }
     
-    public boolean isAlive() { //총알 생존 여부
+
+    public boolean isAlive() { 
     	return alive;
+    }
+
+    public int getDamage() {
+        return damage;
     }
 }

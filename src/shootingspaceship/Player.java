@@ -5,12 +5,7 @@
 package shootingspaceship;
 
 import java.awt.Graphics;
-import java.awt.Color;
-/**
- *
- * @author wgpak
- */
-import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.Color;
 
 public class Player {
@@ -41,10 +36,13 @@ public class Player {
     }
 
     public Shot generateShot() {
-        Shot shot = new Shot(x_pos, y_pos);
-
-        return shot;
+        return new Shot(x_pos, y_pos, 5);
     }
+    
+    public Rectangle getBounds() {
+        return new Rectangle((int)x_pos, (int)y_pos, width, height);
+    }
+
 
     public void drawPlayer(Graphics g) {
         g.setColor(Color.blue);
