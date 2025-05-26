@@ -25,9 +25,12 @@ public class Bomb extends Enemy{
     private int speedY;
 	private int x;
 	private int y;
-    
-    private static final int WIDTH = 32;
-    private static final int HEIGHT = 32;
+	
+	int scaledBWidth = 1;  //폭탄 원하는 너비
+	int scaledBHeight = 150; //폭탄 원하는 높이
+	
+    public static final int WIDTH = 32;
+    public static final int HEIGHT = 32;
     private static final int SCREEN_HEIGHT = 800;
     
     public Bomb(float x, float y, int speedY) {
@@ -70,8 +73,17 @@ public class Bomb extends Enemy{
     }
     
     @Override
+    public Rectangle getBounds() {
+    	int width = (bombImage != null) ? bombImage.getWidth() : 32;   // 기본값 32
+        int height = (bombImage != null) ? bombImage.getHeight() : 32;
+        return new Rectangle(x, y, width, height);
+    }
+    
+    @Override
     public boolean isCollidedWithPlayer(Player player) {
-        if (bombImage == null) return false;
+//        if (bombImage == null) {
+//        	return false;
+//        }
 
         Rectangle bombBounds = new Rectangle((int)x, (int)y, bombImage.getWidth(), bombImage.getHeight());
         Rectangle playerBounds = player.getBounds();
@@ -82,7 +94,6 @@ public class Bomb extends Enemy{
         }
         return false;
     }
-
     
     public void move() {
         y += speed;
@@ -96,13 +107,12 @@ public class Bomb extends Enemy{
     	if (!active) return;
     	
     	if(bombImage != null) {
-    		g.drawImage(bombImage, (int)x, (int)y, null);
+    		g.drawImage(bombImage, (int)x, (int)y, scaledBWidth, scaledBHeight, null);
     	} else {
     		g.setColor(Color.YELLOW);
             g.fillOval((int)x, (int)y, WIDTH, HEIGHT);
     	}
     }
-    
     
     //패링 설정 메소드
     public void setParryable(boolean parryable) {
@@ -124,7 +134,5 @@ public class Bomb extends Enemy{
     //활성화
     public boolean isActive() {
     	return active;
-    }
-    
-       
+    }   
 }
