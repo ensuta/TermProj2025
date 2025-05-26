@@ -1,6 +1,7 @@
 package shootingspaceship; 
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.Color; 
 import javax.imageio.ImageIO; 
 import java.awt.image.BufferedImage; 
@@ -84,10 +85,14 @@ public class Enemy {
 
     // 적이 플레이어와 충돌했는지 검사
     public boolean isCollidedWithPlayer(Player player) {
+    	Rectangle bombBounds = getBounds();
+        Rectangle playerBounds = player.getBounds();
+    	
+    	int collision_distance = 32;
         if (-collision_distance <= (y_pos - player.getY()) && (y_pos - player.getY() <= collision_distance)) {
             if (-collision_distance <= (x_pos - player.getX()) && (x_pos - player.getX() <= collision_distance)) {
+            	System.out.println("폭탄과 플레이어 충돌!");
                 return true; 
-
             }
         }
         return false; 
@@ -105,4 +110,9 @@ public class Enemy {
             g.drawImage(enemyImage, max_x, max_y, null); 
         }
   }
+
+	public Rectangle getBounds() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
