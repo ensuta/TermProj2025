@@ -7,7 +7,6 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
-import java.util.ArrayList;
 
 
 public class Shootingspaceship extends JPanel implements Runnable {//게임클래스
@@ -56,7 +55,17 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     //배경 이미지
     private Image backgroundImg;
     
+    long lastBombTime = 0;
+    long bombInterval = 1500; // 1.5초
+    //폭탄 객체 리스트(clearbomb도 같은 리스트 사용)
+    protected List<Bomb> bombs = new ArrayList<>();
     
+    //2페이지 바람 방해 패턴 변수
+    private boolean showWindEffect = false;
+    private long windEffectEndTime = 0;
+    //3페이지 연기, 장애물 패턴 변수
+    protected List<Debris> debrisList = new ArrayList<>();
+    private SmokeEffect smokeEffect;
 
     public Shootingspaceship() {//생성자
     	boss = new BombardiroCrocodilo(100, 50);
@@ -139,7 +148,8 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
                 enemies.add(newEnemy);
                 ++enemySize;
-
+                
+                
             }
         }
     }
@@ -155,6 +165,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     		break;
     	case 2:
     		bossImagePath = "crocodiro.png";
+    		
     		break;
     	case 3:
     		bossImagePath = "tung.png";
@@ -163,17 +174,35 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     		bossImagePath = "missing.png";
     		break;
     	}
+    	
         boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath, stage);
         boss.setHealth(stageManager.getBossHealthForStage());
         
         bossAppear = true;
     }
 
-    
+    @Override
     public void run() { //루프
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
         while (true) {
+        	long currentTime = System.currentTimeMillis();
+        	
+        	// 폭탄 생성 조건 (보스가 존재하고, 일정 시간 간격마다)
+            if (boss != null && currentTime - lastBombTime > bombInterval) {
+                Bomb bomb = new Bomb(boss.getX(), boss.getY(), 3);
+                bombs.add(boss.shootBomb());
+                lastBombTime = currentTime;
+            }
+         
+            repaint();
+            try {
+                Thread.sleep(16); // 약 60fps
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        	
+        	
         	// 총알 이동, 밖으로 나간 총알 제거
             if (shooting) {
                 long now = System.currentTimeMillis();
@@ -235,15 +264,28 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                     JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
                     System.exit(0);
                 }
+                //update
+                for (int i = 0; i < bombs.size(); i++) {
+                    Bomb bomb = bombs.get(i);
+                    bomb.update();
+                    
+                    if (bomb.isCollidedWithPlayer(player)) {
+                        JOptionPane.showMessageDialog(this, "게임오버: 폭탄이 플레이어와 충돌");
+                        System.exit(0);
+                    }
+
+                    if (!bomb.isActive()) {
+                        bombs.remove(i);
+                        i--; // 리스트 요소 제거 후 인덱스 보정
+                    }
+                }
+
             }
             if (needClearEnemies) {
                 enemies.clear();
                 enemySize = 0;
             }
-
-
-
-
+            
             if (boss != null) {
                 boss.move();
 
@@ -290,6 +332,55 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         }
     }
+    
+    //2페이지 바람 방해 패턴
+    public void spawnWindEffect() {
+        showWindEffect = true;
+        windEffectEndTime = System.currentTimeMillis() + 3000;
+    }
+    public void updateFinalStage() {
+        if (stageManager.isFinalStage()) {
+            smokeEffect.update();
+
+            for (Debris d : debrisList) {
+                d.moveDown();
+            }
+
+            // 충돌 감지
+            for (Debris d : debrisList) {
+                if (d.getBounds().intersects(player.getBounds())) {
+                	boss.isCollidedWithPlayer(player); // 충돌 시 게임 오버 처리
+                }
+            }
+        }
+    }
+    
+    //3페이지 연기, 장애물 패턴
+    public void triggerFinalStagePattern() {
+		StageManager.isFinalStage(true);
+
+	    // 연기 효과 시작
+	    smokeEffect = new SmokeEffect();
+	    smokeEffect.start();
+
+	    // 장애물 생성 시작
+	    for (int i = 0; i < 5; i++) {
+	        int randomX = new Random().nextInt(800); // 화면 폭 기준
+	        debrisList.add(new Debris(randomX, -50)); // 위에서 떨어짐
+	    }
+	}
+    
+    //화면 내 enemy 처치하는 ClearBomb
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+
+        if (key == KeyEvent.VK_B) { //B키로 폭탄 사용
+        	player.useScreenClearBomb(enemies, bombs);   //기존의 적, 적폭탄 리스트 전달
+        }
+
+        // 기존 이동 키 처리 등...
+    }
+
 
 
     public void initImage(Graphics g) {
@@ -315,17 +406,40 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
             Enemy enemy = enemyList.next();
             enemy.draw(g);
         }
-        for (int i = 0; i < shots.length; i++) {
-            if (shots[i] != null) {
-                shots[i].drawShot(g);
+        for (int i = 0; i < bombs.size(); i++) {
+            if (bombs.get(i) != null) {
+                bombs.get(i).drawBomb(g);
             }
         }
         if (boss != null) {
             boss.draw(g);
         }
+        
+        if(showWindEffect) {
+        	if(System.currentTimeMillis() > windEffectEndTime) {
+        		showWindEffect = false;
+        	}
+        }
+        if (stageManager.isFinalStage()) {
+            smokeEffect.draw(g);
+
+            for (Debris d : debrisList) {
+                d.draw(g);
+            }
+        }
+        
+        else {
+        	g.setColor(new Color(135, 206, 250, 128));
+        	g.fillRect(0, 0, getWidth(), getHeight());
+        	g.setColor(Color.BLUE);
+        	g.drawString("강풍!", getWidth() / 2 - 20, 50);
+        	
+        }
+        
         // 스테이지 정보
         g.setColor(Color.WHITE);
         g.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
+        g.drawString("Bombs: " + player.getScreenBombCount(), 10, 40);
     }
 
 
