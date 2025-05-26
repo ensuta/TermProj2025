@@ -66,4 +66,9 @@ public class StageManager {
     		g.drawImage(backgroundImage, 0, 0, null);
     	}
     }
+
+	public static void isFinalStage(boolean b) {
+		// TODO Auto-generated method stub
+		
+	}
 }
