@@ -19,6 +19,8 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     private javax.swing.Timer timer;
     private boolean playerMoveLeft;
     private boolean playerMoveRight;
+    protected boolean playerMoveUp;		//위로 움직임
+    protected boolean playerMoveDown;	//아래로 움직임
     private Image dbImage;
     private Graphics dbg;
     private Random rand;
@@ -33,6 +35,8 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     private final int playerMargin = 10;
     private final int playerLeftSpeed = -2;
     private final int playerRightSpeed = 2;
+    protected final int playerUpSpeed = -2;
+    protected final int playerDownSpeed = 2;
     //적
     private final int enemyMaxDownSpeed = 1;
     private final int enemyMaxHorizonSpeed = 1;
@@ -68,7 +72,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
 
         setBackground(Color.black); // background color
         setPreferredSize(new Dimension(width, height)); // game size
-        player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin ); // 플레이어 생성
+        player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin,  0, height-playerMargin); // 플레이어 생성
 
         try {
         	backgroundImg = ImageIO.read(getClass().getResource("/shootingspaceship/Image/gamesky.jpg"));
@@ -91,7 +95,13 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 case KeyEvent.VK_RIGHT:
                     playerMoveRight = true;
                     break;
-                case KeyEvent.VK_UP:
+                case KeyEvent.VK_UP:    
+                	playerMoveUp = true;
+                	break;
+                case KeyEvent.VK_DOWN:
+                	playerMoveDown = true;
+                	break;
+                case KeyEvent.VK_Z:
                     shooting = true;
                     break;
             }
@@ -105,7 +115,13 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 case KeyEvent.VK_RIGHT:
                     playerMoveRight = false;
                     break;
-                case KeyEvent.VK_UP:
+                case KeyEvent.VK_UP:    
+                	playerMoveUp = false;
+                	break;
+                case KeyEvent.VK_DOWN:
+                	playerMoveDown = false;
+                	break;
+                case KeyEvent.VK_Z:
                     shooting = false;
                     break;
             }
@@ -194,6 +210,10 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 player.moveX(playerLeftSpeed);
             } else if (playerMoveRight) {
                 player.moveX(playerRightSpeed);
+            } else if (playerMoveUp) {
+            	player.moveY(playerUpSpeed);
+            } else if (playerMoveDown) {
+            	player.moveY(playerDownSpeed);
             }
             boolean needClearEnemies = false;
             Iterator<Enemy> enemyList = enemies.iterator();

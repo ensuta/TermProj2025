@@ -12,12 +12,16 @@ public class Player {
     private int y_pos;
     private int min_x;
     private int max_x;
-
-    public Player(int x, int y, int min_x, int max_x) {
+    protected int min_y;	//최소 y 값
+    protected int max_y;	//최대 y 값
+    
+    public Player(int x, int y, int min_x, int max_x, int min_y, int max_y) {
         x_pos = x;
         y_pos = y;
         this.min_x = min_x;
         this.max_x = max_x;
+        this.min_y = min_y;
+        this.max_y = max_y;
     }
 
     public void moveX(int speed) {
@@ -25,7 +29,13 @@ public class Player {
         if( x_pos < min_x) x_pos = min_x;
         if( x_pos > max_x) x_pos = max_x;
     }
-
+    
+    public void moveY(int speed) {
+    	y_pos += speed;
+    	if( y_pos < min_y) y_pos = min_y;
+        if( y_pos > max_y) y_pos = max_y;
+    }
+    
     public int getX() {
         return x_pos;
     }
