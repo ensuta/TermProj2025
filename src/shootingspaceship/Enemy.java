@@ -20,7 +20,7 @@ public class Enemy {
     float delta_y_inc; 
     final int collision_distance = 10;
     BufferedImage enemyImage; 
-    private static final String babycrocodiro_IMAGE_PATH = "/shootingspaceship/Image/babycrocodiro-removebg-preview.png";
+    private static final String babycrocodiro_IMAGE_PATH = "src\\shootingspaceship\\image\\babycroco.png";
     //스테이지마다 적과 보스의 이미지가 달라져야하는데.... 모르겟음
     // 적 생성자: 위치, 속도, 화면 크기, 속도 증가량을 받아 초기화
     public Enemy(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc) {
@@ -33,7 +33,7 @@ public class Enemy {
         this.delta_y_inc = delta_y_inc; 
         
         try {
-        	enemyImage = ImageIO.read(getClass().getResource(babycrocodiro_IMAGE_PATH));
+        	enemyImage = ImageIO.read(new File(babycrocodiro_IMAGE_PATH));
         } catch (IOException e) {
             e.printStackTrace();
         }

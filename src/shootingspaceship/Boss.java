@@ -9,12 +9,12 @@ public class Boss extends Enemy {
     private int health; 
     private final Color bossColor = Color.RED; // 보스의 색상
     BufferedImage bossImage; 
-    private static final String shark_IMAGE_PATH = "src\\shootingspaceship\\image\\shark_128x128.png"; 
+    //private static final String shark_IMAGE_PATH = "src\\shootingspaceship\\image\\shark_128x128.png"; 
 
     public Boss(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc, String imagePath, int i){
         super(x, y, delta_x, delta_y, max_x, max_y, delta_y_inc); 
         try {
-            bossImage = ImageIO.read(new File("/shootingspaceship/Image/sobabycrocodiro-removebg-preview.png"+i)); 
+            bossImage = ImageIO.read(new File("src\\shootingspaceship\\image\\"+imagePath)); 
         } catch(IOException e) {
             e.printStackTrace(); 
         }

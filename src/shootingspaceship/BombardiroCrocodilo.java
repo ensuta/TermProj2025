@@ -41,7 +41,7 @@ public class BombardiroCrocodilo extends Boss {
 	private SmokeEffect smokeEffect;
 	
 	public BombardiroCrocodilo(int x, int y) {
-		super(x, y, 0.5f, 1.0f, 800, 600, 0.05f, "image_crocodiro-removebg-preview(1).png", 1);
+		super(x, y, 0.5f, 1.0f, 800, 600, 0.05f, "crocodiro.png", 1);
 	}
 	
 	public void attack(List<Bomb> activeBombs) {
