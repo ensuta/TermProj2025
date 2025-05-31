@@ -167,6 +167,9 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     	case 3:
     		bossImagePath = "tung.png";
     		break;
+    	case 4:
+    		bossImagePath = "lirili_larila.png";
+    		break;
     	default:
     		bossImagePath = "missing.png";
     		break;

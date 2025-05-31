@@ -7,6 +7,8 @@ import java.io.IOException;
 
 public class Boss extends Enemy { 
     private int health; 
+    protected int maxHealth;
+    
     private final Color bossColor = Color.RED; // 보스의 색상
     BufferedImage bossImage; 
     //private static final String shark_IMAGE_PATH = "src\\shootingspaceship\\image\\shark_128x128.png"; 
@@ -24,6 +26,7 @@ public class Boss extends Enemy {
     }
     public void setHealth(int health) { // 체력 직접 설정
         this.health = health;
+        this.maxHealth = health;
     }
     
     public void setBossImage(Image img) {
@@ -37,15 +40,31 @@ public class Boss extends Enemy {
             int imgH = bossImage.getHeight(); 
             g.drawImage(bossImage, (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null); 
             g.setColor(bossColor);
-            g.drawString("Health: " + health, (int) x_pos - 20, (int) y_pos - 10); 
             
-        }else { // 이미지가 없으면, 아마 의미없음
-            g.setColor(bossColor); 
-            int[] x_poly = {(int) x_pos, (int) x_pos - 15, (int) x_pos, (int) x_pos + 15}; 
-            int[] y_poly = {(int) y_pos + 20, (int) y_pos, (int) y_pos + 15, (int) y_pos}; 
-            g.fillPolygon(x_poly, y_poly, 4); 
-            g.setColor(Color.WHITE); 
-            g.drawString("Health: " + health, (int) x_pos - 20, (int) y_pos - 10);
+            //체력바 그리기
+            int barWidth = imgW; //체력바 너비는 보스 이미지 너비와 동
+            int barHeight = 10; //체력바 높이는 고정값으로 설정 (10픽셀)
+            int barX = (int)(x_pos - imgW/2); //체력바 X위치 -> 이미지 왼쪽 끝과 일치
+            int barY = (int)(y_pos - imgH /2)- 15; // 체력바 Y위치는 이미지 위쪽에서 약간 띄운 위치
+
+            float healthRatio = (float) health / (float) maxHealth; //현재 체력을 최대 체력으로 나눠 비율 계산
+            int currentBarWidth = (int)(barWidth * healthRatio); //비율기반 체력바 현재 너비 계산
+
+            // 체력바 배경 (회색)
+            g.setColor(Color.GRAY);
+            g.fillRect(barX, barY, barWidth, barHeight);
+
+            // 체력바 실제 체력 (빨강)
+            g.setColor(Color.RED);
+            g.fillRect(barX, barY, currentBarWidth, barHeight);
+
+            // 테두리
+            g.setColor(Color.BLACK);
+            g.drawRect(barX, barY, barWidth, barHeight);
+            
+            //체력 숫자
+            g.setColor(Color.WHITE);
+            g.drawString(health + "/" + maxHealth, barX + 5, barY - 2); //체력 숫자를 흰색으로 표시   
         }
     }
 
