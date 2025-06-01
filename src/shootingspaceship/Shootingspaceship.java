@@ -58,6 +58,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     
 
     public Shootingspaceship() {//생성자
+    	MusicPlayer.playLoop("sounds/backgroundmusic.wav"); // 배경음악 재생
         stageManager = new StageManager(); 
         shots = new Shot[ maxShotNum ]; 
         enemies = new ArrayList<Enemy>(); 
