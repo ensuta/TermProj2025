@@ -1,13 +1,16 @@
 package shootingspaceship;
 
-import javax.imageio.ImageIO;
-import java.io.IOException;
 import java.awt.*;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 import java.util.List;
-
+import javax.swing.Timer;
 
 public class Shootingspaceship extends JPanel implements Runnable {//게임클래스
 
@@ -66,6 +69,8 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     //3페이지 연기, 장애물 패턴 변수
     protected List<Debris> debrisList = new ArrayList<>();
     private SmokeEffect smokeEffect;
+    
+    //마지막 스테이지 바람 공격
 
     public Shootingspaceship() {//생성자
     	boss = new BombardiroCrocodilo(100, 50);
@@ -264,7 +269,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                     JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
                     System.exit(0);
                 }
-                //update
+                //폭탄 공격
                 for (int i = 0; i < bombs.size(); i++) {
                     Bomb bomb = bombs.get(i);
                     bomb.update();
@@ -279,6 +284,17 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                         i--; // 리스트 요소 제거 후 인덱스 보정
                     }
                 }
+                //장애물 패턴
+                for(Debris d : debrisList) {
+                	 if(player.getBounds().intersects(d.getBounds())) {
+                		 System.out.println("Debris와 충돌!");
+                		//플레이어 위치 되돌리기 또는 데미지
+                		 player.setX(player.getPrevX());
+                		 player.setY(player.getPrevY());
+                		 break;
+                	 }
+                }
+                
 
             }
             if (needClearEnemies) {
@@ -307,6 +323,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                         } else {
                             // 마지막 스테이지 클리어 시
                             JOptionPane.showMessageDialog(this, "게임 클리어!");
+                            repaint();
                         }
                         continue;
                     }
@@ -338,37 +355,8 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         showWindEffect = true;
         windEffectEndTime = System.currentTimeMillis() + 3000;
     }
-    public void updateFinalStage() {
-        if (stageManager.isFinalStage()) {
-            smokeEffect.update();
-
-            for (Debris d : debrisList) {
-                d.moveDown();
-            }
-
-            // 충돌 감지
-            for (Debris d : debrisList) {
-                if (d.getBounds().intersects(player.getBounds())) {
-                	boss.isCollidedWithPlayer(player); // 충돌 시 게임 오버 처리
-                }
-            }
-        }
-    }
     
-    //3페이지 연기, 장애물 패턴
-    public void triggerFinalStagePattern() {
-		StageManager.isFinalStage(true);
-
-	    // 연기 효과 시작
-	    smokeEffect = new SmokeEffect();
-	    smokeEffect.start();
-
-	    // 장애물 생성 시작
-	    for (int i = 0; i < 5; i++) {
-	        int randomX = new Random().nextInt(800); // 화면 폭 기준
-	        debrisList.add(new Debris(randomX, -50)); // 위에서 떨어짐
-	    }
-	}
+    
     
     //화면 내 enemy 처치하는 ClearBomb
     public void keyPressed(KeyEvent e) {
@@ -380,8 +368,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
 
         // 기존 이동 키 처리 등...
     }
-
-
+    
 
     public void initImage(Graphics g) {
         if (dbImage == null) {
@@ -398,6 +385,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
 
 
     public void paintComponent(Graphics g) {
+    	super.paintComponent(g);
         // 각종 그리기
         initImage(g);
         player.drawPlayer(g);
@@ -405,10 +393,16 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         while (enemyList.hasNext()) {
             Enemy enemy = enemyList.next();
             enemy.draw(g);
+            
         }
         for (int i = 0; i < bombs.size(); i++) {
             if (bombs.get(i) != null) {
                 bombs.get(i).drawBomb(g);
+            }
+        }
+        for (int i = 0; i < shots.length; i++) {
+            if (shots[i] != null) {
+                shots[i].drawShot(g);
             }
         }
         if (boss != null) {
@@ -421,21 +415,52 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         	}
         }
         if (stageManager.isFinalStage()) {
-            smokeEffect.draw(g);
-
-            for (Debris d : debrisList) {
-                d.draw(g);
-            }
+        	if(smokeEffect != null) {
+        		smokeEffect.draw(g);
+        	}
+        }
+        if(debrisList != null) {
+        	for(Debris d : debrisList) {
+        		d.draw(g);
+        	}
+        }
+        //마지막 스테이지 장애물(debris)
+        if(stageManager.getCurrentStage() == 5 && debrisList.isEmpty()) {
+        	Image debrisImage = stageManager.loadImage("debris.png");
+        	//왼쪽 벽
+        	for(int y=0; y<getHeight(); y+=60) {
+        		debrisList.add(new Debris(0, y, 40, 40, debrisImage));
+        	}
+        	//오른쪽 벽
+        	for(int y=30; y<getHeight(); y+=60) {
+        		debrisList.add(new Debris(getWidth()-40, y, 40, 40, debrisImage));
+        	}
+        	//위쪽 벽
+        	for(int x=60; x<getWidth()-60; x+=100) {
+        		debrisList.add(new Debris(x, 0, 40, 40, debrisImage));
+        	}
+        	for(int x=60; x<getWidth()-60; x+=100) {
+        		debrisList.add(new Debris(x, getHeight()-40, 40, 40, debrisImage));
+        	}
+        }
+        //debris 그리기
+        if(stageManager.isFinalStage()) {
+        	if(smokeEffect != null) {
+        		smokeEffect.draw(g);
+        	}
+        	for(Debris d : debrisList) {
+        		d.draw(g);
+        	}
         }
         
-        else {
+        
+        if(stageManager.getCurrentStage() == stageManager.getMaxStage()) {
         	g.setColor(new Color(135, 206, 250, 128));
         	g.fillRect(0, 0, getWidth(), getHeight());
         	g.setColor(Color.BLUE);
         	g.drawString("강풍!", getWidth() / 2 - 20, 50);
         	
-        }
-        
+       }
         // 스테이지 정보
         g.setColor(Color.WHITE);
         g.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
