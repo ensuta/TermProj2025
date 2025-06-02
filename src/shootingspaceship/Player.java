@@ -22,7 +22,7 @@ public class Player {
     private int screenBombCount = 3;
     //추가기능(장애물 패턴용 이전 위치 저장)
     private int prevX, prevY;
-    
+
     public Player(int x, int y, int min_x, int max_x, int min_y, int max_y) {
         x_pos = x;
         y_pos = y;
@@ -43,29 +43,12 @@ public class Player {
     }
     
     public void moveY(int speed) {
-    	//isFrozen만 추가기능
-    //	if(!isFrozen) {
     		y_pos += speed;
     		if( y_pos < min_y) y_pos = min_y;
     		if( y_pos > max_y) y_pos = max_y;
     //	}
     	
     }
-    //추가기능
-  //  public void freeze(long durationMillis) {
- //   	isFrozen = true;
- //   	frozenUntil = System.currentTimeMillis() + durationMillis;
- //   }
-    //추가기능
- //   public void updateMovement() {
-  //  	if(isFrozen && System.currentTimeMillis() > frozenUntil) {
- //   		isFrozen = false;
- //   	}
-  //  }
-    //추가기능
-  //  public boolean isFrozen() {
-  //  	return isFrozen;
-  //  }
     //추가기능
     public Rectangle getBounds() {
     	 return new Rectangle(x_pos, y_pos, WIDTH, HEIGHT);
@@ -117,6 +100,12 @@ public class Player {
         }
    }
     
+    public void moveY(int speed) {
+    	y_pos += speed;
+    	if( y_pos < min_y) y_pos = min_y;
+        if( y_pos > max_y) y_pos = max_y;
+    }
+
     public int getX() {
         return x_pos;
     }

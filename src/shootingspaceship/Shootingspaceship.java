@@ -1,5 +1,7 @@
 package shootingspaceship;
 
+import javax.imageio.ImageIO;
+import java.io.IOException;
 import java.awt.*;
 
 import javax.imageio.ImageIO;
@@ -57,7 +59,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     private boolean shooting = false;
     private long lastShotTime = 0;
     private int shotInterval = 50; // 총알 발사 간격
-    
+
     //배경 이미지
     private Image backgroundImg;
     
@@ -189,6 +191,9 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     	case 3:
     		bossImagePath = "tung.png";
     		break;
+    	case 4:
+    		bossImagePath = "lirili_larila.png";
+    		break;
     	default:
     		bossImagePath = "missing.png";
     		break;
@@ -248,8 +253,6 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 bossShots.clear();    // 보스 공격 등도 제거할 수 있음
             }
 
-            
-
             //이동 처리
             if (playerMoveLeft) {
                 player.moveX(playerLeftSpeed);
@@ -298,6 +301,13 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 enemies.clear();
                 enemySize = 0;
             }
+            if (needClearEnemies) {
+                enemies.clear();
+                enemySize = 0;
+            }
+
+
+
 
             if (boss != null) {
                 boss.move();
@@ -356,6 +366,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         }
     }
 
+
     public void initImage(Graphics g) {
         if (dbImage == null) {
             dbImage = createImage(this.getSize().width, this.getSize().height);
@@ -387,7 +398,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         if (boss != null) {
             boss.draw(g);
         }
-        
+
         for (int i = 0; i < bombs.size(); i++) {
             if (bombs.get(i) != null) {
                 bombs.get(i).drawBomb(g);
@@ -412,7 +423,6 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         	g.drawString("wind!", getWidth() / 2 - 20, 50);
         	
        }
-        
         // 스테이지 정보
         g.setColor(Color.WHITE);
         g.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
@@ -429,3 +439,4 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         ship.start();
     }
 }
+
