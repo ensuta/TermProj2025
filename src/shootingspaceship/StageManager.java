@@ -31,6 +31,10 @@ public class StageManager {
     public Image loadImage(String fileName) {
     	return new ImageIcon(getClass().getResource("/shootingspaceship/Image/" + fileName)).getImage();
     }
+    //추가기능
+    public int getMaxStage() {
+        return maxStage;
+    }
     
     public int getCurrentStage() {
         return currentStage; 
@@ -66,9 +70,4 @@ public class StageManager {
     		g.drawImage(backgroundImage, 0, 0, null);
     	}
     }
-
-	public static void isFinalStage(boolean b) {
-		// TODO Auto-generated method stub
-		
-	}
 }
