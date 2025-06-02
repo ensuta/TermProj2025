@@ -19,7 +19,7 @@ public class Enemy {
     final int collision_distance = 30;
     BufferedImage enemyImage; 
     private static final String babyshark_IMAGE_PATH = "src\\shootingspaceship\\image\\babyshark_64x64.png";
-    //스테이지마다 적과 보스의 이미지가 달라져야하는데.... 모르겟음
+    //스테이지마다 적의 이미지가 달라져야댐
     // 적 생성자: 위치, 속도, 화면 크기, 속도 증가량을 받아 초기화
     public Enemy(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc) {
         x_pos = x; 
@@ -82,17 +82,9 @@ public class Enemy {
     }
 
     public void draw(Graphics g) {
-        if(enemyImage != null) { 
-            int imgW = enemyImage.getWidth(); 
-            int imgH = enemyImage.getHeight(); 
-            g.drawImage(enemyImage, (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null);
-        } else { //이미지가없으면, 아마 의미없음
-            g.setColor(Color.yellow); 
-            int[] x_poly = {(int) x_pos, (int) x_pos - 10, (int) x_pos, (int) x_pos + 10};
-            int[] y_poly = {(int) y_pos + 15, (int) y_pos, (int) y_pos + 10, (int) y_pos};
-            g.fillPolygon(x_poly, y_poly, 4); 
-            g.drawImage(enemyImage, max_x, max_y, null); 
-        }
+        int imgW = enemyImage.getWidth(); 
+        int imgH = enemyImage.getHeight(); 
+        g.drawImage(enemyImage, (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null);
     }
 
 	public Rectangle getBounds() {

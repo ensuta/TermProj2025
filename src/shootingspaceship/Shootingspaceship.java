@@ -13,36 +13,33 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private Shot[] shots;
     private ArrayList<Enemy> enemies;
     private Boss boss = null;
-
     private Thread th;
     private int enemySize;
     private javax.swing.Timer timer;
     private boolean playerMoveLeft;
     private boolean playerMoveRight;
-    protected boolean playerMoveUp;		//위로 움직임
-    protected boolean playerMoveDown;	//아래로 움직임
+    protected boolean playerMoveUp;		
+    protected boolean playerMoveDown;	
     private Image dbImage;
     private Graphics dbg;
     private Random rand;
     private StageManager stageManager;
-    
-    private CharacterType selectedCharacter; // 선택된 캐릭터 유형
+    private CharacterType selectedCharacter; 
 
     //각종 파라미터
     private final int width = 1280;
     private final int height = 720;
     //플레이어
-    private final int shotSpeed = -5; // 총알 자체의 y축 이동 속도 (캐릭터와 무관)
+    private final int shotSpeed = -5; // 총알 자체의 y축 이동 속도
     private int maxShotNum = 10000;
     private final int playerMargin = 10;
-    
     private int currentPlayerMoveSpeed;
     private int currentShotInterval;
     
     //적
     private final int enemyMaxDownSpeed = 1;
     private final int enemyMaxHorizonSpeed = 2;
-    private final float enemyDownSpeedInc = 0.5f;//적수직속도 증가량
+    private final float enemyDownSpeedInc = 0.5f;
     //적 난이도?
     private final int enemyTimeGap = 500;
     private final int maxEnemySize = 20;
@@ -66,8 +63,8 @@ public class Shootingspaceship extends JPanel implements Runnable {
     long currentTime = System.currentTimeMillis();
     //폭탄 사용 변수
     private boolean useBombTriggered = false;
-    private int screenBombCount = 3;
     List<Shot> bossShots = new ArrayList<>();
+
   //2페이지 바람 방해 패턴 변수
     private boolean showWindEffect = false;
     private long windEffectEndTime = 0;
@@ -102,11 +99,8 @@ public class Shootingspaceship extends JPanel implements Runnable {
                 playerMoveDown = false;
             }
         });
-        bossThreshold = stageManager.getEnemyCountForStage(); // 보스등장조건
-
-
-        setBackground(Color.black); // background color
-        setPreferredSize(new Dimension(width, height)); // game size
+        bossThreshold = stageManager.getEnemyCountForStage();
+        setPreferredSize(new Dimension(width, height));
 
         player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin,  0, height-playerMargin, this.selectedCharacter.bulletDamage);
 
@@ -115,6 +109,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        setBackground(Color.black); 
     }
 
     public void start() {//루프시작
@@ -170,7 +165,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
     }
 
 
-    private class addANewEnemy implements ActionListener {//적 생성
+    private class addANewEnemy implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             if (!bossAppear && enemySize < maxEnemySize) {
                 // 적 생성
@@ -225,7 +220,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         while (true) {
             if (shooting) {
                 long now = System.currentTimeMillis();
-                if (now - lastShotTime > currentShotInterval) { // 수정됨
+                if (now - lastShotTime > currentShotInterval) { 
                     for (int i = 0; i < shots.length; i++) {
                         if (shots[i] == null) {
                             shots[i] = player.generateShot();
@@ -471,7 +466,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         frame.getContentPane().add(ship);
         frame.pack();
         frame.setVisible(true);
-        ship.requestFocusInWindow(); // ← 반드시 추가!
+        ship.requestFocusInWindow(); 
         ship.start();
     }
 }

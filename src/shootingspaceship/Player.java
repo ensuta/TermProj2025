@@ -20,7 +20,7 @@ public class Player {
     private boolean isFrozen = false;
     private long frozenUntil = 0;
     //추가기능(화면 정리 폭탄)
-    private int screenBombCount = 3;
+    private int screenBombCount = 30;
     //추가기능(장애물 패턴용 이전 위치 저장)
     private int prevX, prevY;
 
