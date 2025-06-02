@@ -46,8 +46,6 @@ public class Player {
     		y_pos += speed;
     		if( y_pos < min_y) y_pos = min_y;
     		if( y_pos > max_y) y_pos = max_y;
-    //	}
-    	
     }
     //추가기능
     public Rectangle getBounds() {
@@ -99,12 +97,6 @@ public class Player {
             System.out.println("폭탄 사용! 모든 적과 폭탄이 제거되었습니다.");
         }
    }
-    
-    public void moveY(int speed) {
-    	y_pos += speed;
-    	if( y_pos < min_y) y_pos = min_y;
-        if( y_pos > max_y) y_pos = max_y;
-    }
 
     public int getX() {
         return x_pos;
