@@ -251,16 +251,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 e.printStackTrace();
             }
             
-          //추가기능(장애물 패턴)
-            for(Debris d : debrisList) {
-            	 if(player.getBounds().intersects(d.getBounds())) {
-            		 System.out.println("Debris와 충돌!");
-            		//플레이어 위치 되돌리기 또는 데미지
-            		 player.setX(player.getPrevX());
-            		 player.setY(player.getPrevY());
-            		 break;
-            	 }
-            }
+          
           //추가기능(플레이어 ClearBomb)
             if (useBombTriggered && player.getScreenBombCount() > 0) {
                 useBombTriggered = false; // 다시 false로 꺼줌 (1번만 발동되도록)
@@ -318,10 +309,45 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                     JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
                     System.exit(0);
                 }
+                for(Debris d : debrisList) {
+                	if (player.getBounds().intersects(d.getBounds())) {
+                		System.out.println("Debris와 충돌!");
+                		
+                		 // 위치 되돌리기
+                        player.setX(player.getPrevX());
+                        player.setY(player.getPrevY());
+
+                        // 게임오버 창 띄우고 종료
+                        JOptionPane.showMessageDialog(this, "게임오버: 장애물과 충돌했습니다.");
+                        System.exit(0);
+                        break;
+                	}
+                }
+                
+                
             }
             if (needClearEnemies) {
                 enemies.clear();
                 enemySize = 0;
+            }
+          //마지막 스테이지 장애물(debris)
+            if(stageManager.getCurrentStage() == 5 && debrisList.isEmpty()) {
+            	Image debrisImage = stageManager.loadImage("debris.png");
+            	//왼쪽 벽
+            	for(int y=0; y<getHeight(); y+=60) {
+            		debrisList.add(new Debris(0, y, 40, 40, debrisImage));
+            	}
+            	//오른쪽 벽
+            	for(int y=30; y<getHeight(); y+=60) {
+            		debrisList.add(new Debris(getWidth()-40, y, 40, 40, debrisImage));
+            	}
+            	//위쪽 벽
+            	for(int x=60; x<getWidth()-60; x+=100) {
+            		debrisList.add(new Debris(x, 0, 40, 40, debrisImage));
+            	}
+            	for(int x=60; x<getWidth()-60; x+=100) {
+            		debrisList.add(new Debris(x, getHeight()-40, 40, 40, debrisImage));
+            	}
             }
             
           //추가기능(폭탄 공격)
@@ -469,25 +495,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         	}
         }
         
-      //마지막 스테이지 장애물(debris)
-        if(stageManager.getCurrentStage() == 5 && debrisList.isEmpty()) {
-        	Image debrisImage = stageManager.loadImage("debris.png");
-        	//왼쪽 벽
-        	for(int y=0; y<getHeight(); y+=60) {
-        		debrisList.add(new Debris(0, y, 40, 40, debrisImage));
-        	}
-        	//오른쪽 벽
-        	for(int y=30; y<getHeight(); y+=60) {
-        		debrisList.add(new Debris(getWidth()-40, y, 40, 40, debrisImage));
-        	}
-        	//위쪽 벽
-        	for(int x=60; x<getWidth()-60; x+=100) {
-        		debrisList.add(new Debris(x, 0, 40, 40, debrisImage));
-        	}
-        	for(int x=60; x<getWidth()-60; x+=100) {
-        		debrisList.add(new Debris(x, getHeight()-40, 40, 40, debrisImage));
-        	}
-        }
+      
         //debris 그리기
         if(stageManager.isFinalStage()) {
         	if(smokeEffect != null) {
