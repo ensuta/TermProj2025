@@ -87,4 +87,14 @@ public class StageManager {
     		g.drawImage(backgroundImage, 0, 0, null);
     	}
     }
+    
+    public String[] getEnemyImagePathForStage() { //스테이지 별 적 이미지
+    	switch(currentStage) {
+    	case 1: return new String[]{"babyshark_64x64_R.png","babyshark_64x64_L.png"};
+    	case 2: return new String[]{"babycroco_R.png","babycroco_L.png"};
+    	case 3: return new String[]{"babytung_R.png","babytung_L.png"};
+    	case 4: return new String[]{"babyralila_R.png","babyralila_L.png"};
+    	default: return new String[]{"babyshark_64x64_R.png","babyshark_64x64_L.png"};
+    	}
+    }
 }

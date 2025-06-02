@@ -396,6 +396,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         while (enemyList.hasNext()) {
             Enemy enemy = enemyList.next();
             enemy.draw(g);
+            enemy.setEnemyImage(stageManager.getEnemyImagePathForStage()); //적이미지 불러옴
         }
         for (int i = 0; i < shots.length; i++) {
             if (shots[i] != null) {

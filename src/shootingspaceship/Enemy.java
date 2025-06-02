@@ -6,6 +6,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage; 
 import java.io.IOException; 
 import java.io.File; 
+import java.net.URL;
 
 public class Enemy { 
 
@@ -17,10 +18,12 @@ public class Enemy {
     int max_y; 
     float delta_y_inc; 
     final int collision_distance = 10;
-    BufferedImage enemyImage; 
-    private static final String babyshark_IMAGE_PATH = "src\\shootingspaceship\\image\\babyshark_64x64.png";
-    //스테이지마다 적과 보스의 이미지가 달라져야하는데.... 모르겟음
-    // 적 생성자: 위치, 속도, 화면 크기, 속도 증가량을 받아 초기화
+    BufferedImage[] enemyImage; //이미지 파일 BufferedImage 객체 배열로 만들어서 애니메이션 효과줌
+    int currentFrame = 0; // 현재 보여줄 프레임 인덱스(0번 프레임)
+    long lastFrameTime = 0; // 마지막으로프레임이 전환된 시간 -> System.currentTImeMillis() 기준 시간 저장
+    int frameDelay = 300; // 프레임 전환 간의 지연 시간 0.3초마다 다음 프레임으로 애니메이션 전환 
+   
+    
     public Enemy(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc) {
         x_pos = x; 
         y_pos = y; 
@@ -29,10 +32,22 @@ public class Enemy {
         this.max_x = max_x; 
         this.max_y = max_y; 
         this.delta_y_inc = delta_y_inc; 
-        try {
-            enemyImage = ImageIO.read(new File(babyshark_IMAGE_PATH)); 
+    }
+    
+    public void setEnemyImage(String[] imagePath) {
+    	try {
+    		enemyImage = new BufferedImage[imagePath.length]; // 외부에서 전달받은 이미지 경로 개수만큼 bufferedImage 배열 생성
+    		for(int i=0;i<imagePath.length;++i) { //각 이미지 돌면서 파일 로드
+    			String fullPath = "/shootingspaceship/image/" + imagePath[i]; 
+    			URL imageURL = getClass().getResource(fullPath);
+    			if(imageURL == null) { // 이미지 파일 존재하지 않는 경우
+    				System.err.println("이미지 파일을 찾을 수 없습니다.");
+    				continue;
+    			}
+    			enemyImage[i] = ImageIO.read(imageURL);// 이미지 파일읽어서 BufferedImage 객체로 저장
+    		}
         } catch(IOException e) {
-            e.printStackTrace(); 
+        	e.printStackTrace();
         }
     }
 
@@ -82,16 +97,22 @@ public class Enemy {
     }
 
     public void draw(Graphics g) {
-        if(enemyImage != null) { 
-            int imgW = enemyImage.getWidth(); 
-            int imgH = enemyImage.getHeight(); 
-            g.drawImage(enemyImage, (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null);
+    	long currentTime = System.currentTimeMillis(); //현재 시간 측정 (애니메이션 프레임 전환)
+    	
+    	//enemyImage가 null이 아니고 이미지 배열이 비어있지 않은 경우에 실행
+    	if(enemyImage != null && enemyImage.length > 0) {
+    		if(currentTime - lastFrameTime > frameDelay) { //frameDelay만큼 시간이 지났다면 다음 프레임으로 전환
+    			currentFrame = (currentFrame + 1)% enemyImage.length; //프레임 인덱스 순환
+    			lastFrameTime = currentTime; //마지막 프레임 변경시간 갱신
+    		}
+    		int imgW = enemyImage[currentFrame].getWidth(); //현재 프레임의 높이, 너비 계산
+    		int imgH = enemyImage[currentFrame].getHeight();
+    		g.drawImage(enemyImage[currentFrame], (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null); //이미지 x_pos, y_pos 중심으로 화면에 그리기
         } else { //이미지가없으면, 아마 의미없음
             g.setColor(Color.yellow); 
             int[] x_poly = {(int) x_pos, (int) x_pos - 10, (int) x_pos, (int) x_pos + 10};
             int[] y_poly = {(int) y_pos + 15, (int) y_pos, (int) y_pos + 10, (int) y_pos};
             g.fillPolygon(x_poly, y_poly, 4); 
-            g.drawImage(enemyImage, max_x, max_y, null); 
         }
     }
 
