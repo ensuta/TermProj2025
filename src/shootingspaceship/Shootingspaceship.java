@@ -12,13 +12,6 @@ import java.util.*;
 import java.util.List;
 import javax.swing.Timer;
 
-import javax.imageio.ImageIO;
-import java.io.IOException;
-import java.awt.*;
-import javax.swing.*;
-import java.awt.event.*;
-import java.util.*;
-
 public class Shootingspaceship extends JPanel implements Runnable {//게임클래스
 
     private Player player;
@@ -79,9 +72,6 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     private boolean useBombTriggered = false;
     private int screenBombCount = 3;
     List<Shot> bossShots = new ArrayList<>();
-  //추가기능(3페이지 연기, 장애물 패턴 변수)
-    protected List<Debris> debrisList = new ArrayList<>();
-    private SmokeEffect smokeEffect;
   //2페이지 바람 방해 패턴 변수
     private boolean showWindEffect = false;
     private long windEffectEndTime = 0;
@@ -203,7 +193,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     		bossImagePath = "missing.png";
     		break;
     	}
-        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath);
+        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath, stage);
         boss.setHealth(stageManager.getBossHealthForStage());
         
         bossAppear = true;
@@ -236,13 +226,6 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                     }
                 }
             }
-            
-         //추가기능(폭탄 생성 조건 (보스가 존재하고, 일정 시간 간격마다))
-       //     if (boss != null && currentTime - lastBombTime > bombInterval) {
-       //         Bomb bomb = new Bomb(boss.getX(), boss.getY(), 3);
-       //         bombs.add(boss.shootBomb());
-       //         lastBombTime = currentTime;
-      //      }
          
             repaint();
             try {
@@ -309,67 +292,12 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                     JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
                     System.exit(0);
                 }
-                for(Debris d : debrisList) {
-                	if (player.getBounds().intersects(d.getBounds())) {
-                		System.out.println("Debris와 충돌!");
-                		
-                		 // 위치 되돌리기
-                        player.setX(player.getPrevX());
-                        player.setY(player.getPrevY());
-
-                        // 게임오버 창 띄우고 종료
-                        JOptionPane.showMessageDialog(this, "게임오버: 장애물과 충돌했습니다.");
-                        System.exit(0);
-                        break;
-                	}
-                }
-                
                 
             }
             if (needClearEnemies) {
                 enemies.clear();
                 enemySize = 0;
             }
-          //마지막 스테이지 장애물(debris)
-            if(stageManager.getCurrentStage() == 5 && debrisList.isEmpty()) {
-            	Image debrisImage = stageManager.loadImage("debris.png");
-            	//왼쪽 벽
-            	for(int y=0; y<getHeight(); y+=60) {
-            		debrisList.add(new Debris(0, y, 40, 40, debrisImage));
-            	}
-            	//오른쪽 벽
-            	for(int y=30; y<getHeight(); y+=60) {
-            		debrisList.add(new Debris(getWidth()-40, y, 40, 40, debrisImage));
-            	}
-            	//위쪽 벽
-            	for(int x=60; x<getWidth()-60; x+=100) {
-            		debrisList.add(new Debris(x, 0, 40, 40, debrisImage));
-            	}
-            	for(int x=60; x<getWidth()-60; x+=100) {
-            		debrisList.add(new Debris(x, getHeight()-40, 40, 40, debrisImage));
-            	}
-            }
-            
-          //추가기능(폭탄 공격)
-         //   for (int i = 0; i < bombs.size(); i++) {
-         //       Bomb bomb = bombs.get(i);
-          //      bomb.update();
-          //      
-          //      if (bomb.isCollidedWithPlayer(player)) {
-          //          JOptionPane.showMessageDialog(this, "게임오버: 폭탄이 플레이어와 충돌");
-         //           System.exit(0);
-         //       }
-//
-         //       if (!bomb.isActive()) {
-         //           bombs.remove(i);
-         //           i--; // 리스트 요소 제거 후 인덱스 보정
-        //        }
-         //       if (useBombTriggered) {
-        //            useBomb(enemies, bombs);  // 리스트는 실제 게임에서 사용하는 적/폭탄 리스트로 대체
-         //           useBombTriggered = false; // 중복 호출 방지
-        //        }
-//
-       //     }
 
             if (boss != null) {
                 boss.move();
@@ -417,15 +345,6 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         }
     }
-
-  
-
-	//2페이지 바람 방해 패턴
- //   public void spawnWindEffect() {
-  //      showWindEffect = true;
-  //      windEffectEndTime = System.currentTimeMillis() + 3000;
-  //  }
-    
     
     
     //화면 내 enemy 처치하는 ClearBomb
@@ -435,11 +354,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         if (key == KeyEvent.VK_B) { //B키로 폭탄 사용
         	player.useBomb(enemies, bombs);   //기존의 적, 적폭탄 리스트 전달
         }
-
-        // 기존 이동 키 처리 등...
     }
-    
-
 
     public void initImage(Graphics g) {
         if (dbImage == null) {
@@ -484,27 +399,6 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         		showWindEffect = false;
         	}
         }
-        if (stageManager.isFinalStage()) {
-        	if(smokeEffect != null) {
-        		smokeEffect.draw(g);
-        	}
-        }
-        if(debrisList != null) {
-        	for(Debris d : debrisList) {
-        		d.draw(g);
-        	}
-        }
-        
-      
-        //debris 그리기
-        if(stageManager.isFinalStage()) {
-        	if(smokeEffect != null) {
-        		smokeEffect.draw(g);
-        	}
-        	for(Debris d : debrisList) {
-        		d.draw(g);
-        	}
-        }
         
         //추가기능(플레이어가 쓰는 폭탄 개수)
         g.setColor(Color.YELLOW);
@@ -515,7 +409,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         	g.setColor(new Color(135, 206, 250, 128));
         	g.fillRect(0, 0, getWidth(), getHeight());
         	g.setColor(Color.BLUE);
-        	g.drawString("강풍!", getWidth() / 2 - 20, 50);
+        	g.drawString("wind!", getWidth() / 2 - 20, 50);
         	
        }
         
