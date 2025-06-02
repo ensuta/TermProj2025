@@ -1,6 +1,6 @@
-
 package shootingspaceship; 
-import java.awt.Graphics; 
+import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.Color; 
 import javax.imageio.ImageIO; 
 import java.awt.image.BufferedImage; 
@@ -48,13 +48,10 @@ public class Enemy {
             x_pos = max_x; 
             delta_x = -delta_x; 
         }
-        // if (y_pos > max_y) { // 아래쪽 화면을 벗어나면
-        //     y_pos = 0; // y좌표 맨 위로 이동
-        //     delta_y += delta_y_inc; // y속도 증가(난이도 상승)
-        // }
-        //지금은 바닥에 닿으면 게임오버처리.
     }
-
+    public float getX() {
+    	return x_pos;
+    }
     public float getY() {
         return y_pos;
     }
@@ -97,4 +94,9 @@ public class Enemy {
             g.drawImage(enemyImage, max_x, max_y, null); 
         }
     }
+
+	public Rectangle getBounds() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

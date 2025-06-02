@@ -31,8 +31,11 @@ public class StageManager {
     public Image loadImage(String fileName) {
     	return new ImageIcon(getClass().getResource("/shootingspaceship/Image/" + fileName)).getImage();
     }
+    public int getMaxStage() { // 최대 스테이지 가져오기
+        return maxStage;
+    }
     
-    public int getCurrentStage() {
+    public int getCurrentStage() {  // 현재 스테이지 가져오기
         return currentStage; 
     }
 

@@ -3,9 +3,16 @@ package shootingspaceship;
 import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.awt.*;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.*;
+import java.util.List;
+import javax.swing.Timer;
 
 public class Shootingspaceship extends JPanel implements Runnable {//게임클래스
 
@@ -52,11 +59,25 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     private boolean shooting = false;
     private long lastShotTime = 0;
     private int shotInterval = 50; // 총알 발사 간격
-    
+
     //배경 이미지
     private Image backgroundImg;
     
-
+  //폭탄 객체 리스트(clearbomb도 같은 리스트 사용)
+    protected List<Bomb> bombs = new ArrayList<>();
+    private List<Bomb> activeBombs = new ArrayList<>();
+    //폭탄 관련 변수
+    long lastBombTime = 0;
+    long bombInterval = 1500; // 1.5초
+    long currentTime = System.currentTimeMillis();
+    //폭탄 사용 변수
+    private boolean useBombTriggered = false;
+    private int screenBombCount = 3;
+    List<Shot> bossShots = new ArrayList<>();
+  //2페이지 바람 방해 패턴 변수
+    private boolean showWindEffect = false;
+    private long windEffectEndTime = 0;
+    
     public Shootingspaceship() {//생성자
         stageManager = new StageManager(); 
         shots = new Shot[ maxShotNum ]; 
@@ -103,6 +124,9 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                 	break;
                 case KeyEvent.VK_Z:
                     shooting = true;
+                    break;
+                case KeyEvent.VK_B:  // B 키로 폭탄 사용
+                	useBombTriggered = true;
                     break;
             }
         }
@@ -174,7 +198,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     		bossImagePath = "missing.png";
     		break;
     	}
-        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath);
+        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath, stage);
         boss.setHealth(stageManager.getBossHealthForStage());
         
         bossAppear = true;
@@ -206,6 +230,27 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                         shots[i] = null;
                     }
                 }
+            }
+         
+            repaint();
+            try {
+                Thread.sleep(1); // 수정부분
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+          
+          //추가기능(플레이어 ClearBomb)
+            if (useBombTriggered && player.getScreenBombCount() > 0) {
+                useBombTriggered = false; // 다시 false로 꺼줌 (1번만 발동되도록)
+                player.useScreenBomb(); // 폭탄 1회 차감
+
+                // 적 제거
+                enemies.clear();
+
+                // 보스 탄 등 제거
+                activeBombs.clear();  // 화면에 떠 있는 폭탄이 있다면
+                bossShots.clear();    // 보스 공격 등도 제거할 수 있음
             }
 
             //이동 처리
@@ -250,6 +295,11 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
                     JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
                     System.exit(0);
                 }
+                
+            }
+            if (needClearEnemies) {
+                enemies.clear();
+                enemySize = 0;
             }
             if (needClearEnemies) {
                 enemies.clear();
@@ -305,6 +355,16 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         }
     }
+    
+    
+    //화면 내 enemy 처치하는 ClearBomb
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+
+        if (key == KeyEvent.VK_B) { //B키로 폭탄 사용
+        	player.useBomb(enemies, bombs);   //기존의 적, 적폭탄 리스트 전달
+        }
+    }
 
 
     public void initImage(Graphics g) {
@@ -338,6 +398,31 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         if (boss != null) {
             boss.draw(g);
         }
+
+        for (int i = 0; i < bombs.size(); i++) {
+            if (bombs.get(i) != null) {
+                bombs.get(i).drawBomb(g);
+            }
+        }
+        
+        if(showWindEffect) {
+        	if(System.currentTimeMillis() > windEffectEndTime) {
+        		showWindEffect = false;
+        	}
+        }
+        
+        //추가기능(플레이어가 쓰는 폭탄 개수)
+        g.setColor(Color.YELLOW);
+        g.setFont(new Font("Arial", Font.BOLD, 16));
+        g.drawString("Bombs Left: " + player.getScreenBombCount(), 0, 40);
+        
+        if(stageManager.getCurrentStage() == stageManager.getMaxStage()) {
+        	g.setColor(new Color(135, 206, 250, 128));
+        	g.fillRect(0, 0, getWidth(), getHeight());
+        	g.setColor(Color.BLUE);
+        	g.drawString("wind!", getWidth() / 2 - 20, 50);
+        	
+       }
         // 스테이지 정보
         g.setColor(Color.WHITE);
         g.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
