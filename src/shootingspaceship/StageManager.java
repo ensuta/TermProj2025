@@ -20,16 +20,33 @@ public class StageManager {
     //배경 이미지
     private Image backgroundImage;
     
-    public StageManager() {
-    	try {
-    		backgroundImage = ImageIO.read(getClass().getResource("/shootingspaceship/Image/gamesky.jpg"));
-        } catch (IOException e) {
-            e.printStackTrace();
+    private final String[] backgroundImagePaths = {
+    	    "sea.png",
+    	    "sky.png",
+    	    "tungb.png",
+    	    "dessert.png"
+    };
+    
+    public String getBackgroundImagePathForStage() {
+        return backgroundImagePaths[currentStage - 1];
+    }
+
+    public Image getBackgroundImage() {
+        if (backgroundImage == null) {
+            loadBackgroundImage();
         }
+        return backgroundImage;
     }
     
-    public Image loadImage(String fileName) {
-    	return new ImageIcon(getClass().getResource("/shootingspaceship/Image/" + fileName)).getImage();
+    public Image loadBackgroundImage() {
+        String path = getBackgroundImagePathForStage();
+        java.net.URL imgURL = getClass().getResource("/shootingspaceship/image/"+path);
+        if (imgURL == null) {
+            System.err.println("이미지 경로를 찾을 수 없습니다: " + path);
+            return null;
+        }
+        backgroundImage = new ImageIcon(imgURL).getImage();  // 필드에 할당
+        return backgroundImage;
     }
     
     public int getCurrentStage() {
@@ -55,6 +72,7 @@ public class StageManager {
     public boolean advanceStage() {
         if (currentStage < maxStage) { //다음 스테이지로
             currentStage++;
+            loadBackgroundImage();
             return true;
         } else {
             return false;

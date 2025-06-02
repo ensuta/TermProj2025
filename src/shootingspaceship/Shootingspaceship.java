@@ -324,6 +324,13 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     public void paintComponent(Graphics g) {
         // 각종 그리기
         initImage(g);
+        super.paintComponent(g);
+        
+        Image bg = stageManager.getBackgroundImage();
+        if (bg != null) {
+            g.drawImage(bg, 0, 0, width, height, this);
+        }
+        
         player.drawPlayer(g);
         Iterator<Enemy> enemyList = enemies.iterator();
         while (enemyList.hasNext()) {
