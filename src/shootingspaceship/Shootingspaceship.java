@@ -3,18 +3,11 @@ package shootingspaceship;
 import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.awt.*;
-
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.*;
 import java.util.List;
-import javax.swing.Timer;
-
-public class Shootingspaceship extends JPanel implements Runnable {//게임클래스
+public class Shootingspaceship extends JPanel implements Runnable, FocusListener {//게임클래스
 
     private Player player;
     private Shot[] shots;
@@ -86,8 +79,9 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         rand = new Random(1); 
         timer = new javax.swing.Timer(enemyTimeGap, new addANewEnemy()); 
         timer.start(); 
-        addKeyListener(new ShipControl()); 
-        setFocusable(true); 
+        this.addKeyListener(new ShipControl());
+        this.setFocusable(true); // 이미 설정되어 있어야 함
+        this.addFocusListener(this); // FocusListener 등록
         bossThreshold = stageManager.getEnemyCountForStage(); // 보스등장조건
 
 
@@ -207,6 +201,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     
     public void run() { //루프
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+        this.requestFocusInWindow(); // 게임 시작 시 포커스 요청
 
         while (true) {
         	// 총알 이동, 밖으로 나간 총알 제거
@@ -263,6 +258,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
             } else if (playerMoveDown) {
             	player.moveY(playerDownSpeed);
             }
+
             boolean needClearEnemies = false;
             Iterator<Enemy> enemyList = enemies.iterator();
 
@@ -321,12 +317,26 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
 
                         // 다음 스테이지로 진행
                         if (!stageManager.isFinalStage()) {
+                            // 키 입력 상태 강제 초기화
+                            playerMoveLeft = false;
+                            playerMoveRight = false;
+                            playerMoveUp = false;
+                            playerMoveDown = false;
+                            shooting = false;
+
                             stageManager.advanceStage();
                             JOptionPane.showMessageDialog(this, "다음 스테이지로 진행: " + stageManager.getCurrentStage());
+                            this.requestFocusInWindow(); // 포커스 재요청
+
                             bossThreshold = stageManager.getEnemyCountForStage();
                             enemySize = 0;
                             enemies.clear();
-                            timer.start();
+                            // 타이머 재시작 전에 적 생성 로직이 중복 실행되지 않도록 bossAppear 상태를 다시 확인하거나,
+                            // 타이머 시작 로직을 spawnBoss 이후로 옮기는 것을 고려할 수 있습니다.
+                            // 현재 구조에서는 timer.start()가 적절해 보입니다.
+                            if (timer != null && !timer.isRunning()) { // 타이머가 중지된 경우에만 시작
+                                timer.start();
+                            }
                         } else {
                             // 마지막 스테이지 클리어 시
                             JOptionPane.showMessageDialog(this, "게임 클리어!");
@@ -438,5 +448,20 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         frame.setVisible(true);
         ship.start();
     }
+
+	@Override
+	public void focusGained(FocusEvent e) {
+	}
+
+	@Override
+	public void focusLost(FocusEvent e) {
+		// 포커스를 잃었을 때 모든 입력 강제로 false로 설정
+		playerMoveLeft = false;
+		playerMoveRight = false;
+		playerMoveUp = false;
+		playerMoveDown = false;
+		shooting = false;
+
+	}
 }
 

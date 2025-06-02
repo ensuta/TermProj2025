@@ -96,7 +96,6 @@ public class Enemy {
     }
 
 	public Rectangle getBounds() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }
