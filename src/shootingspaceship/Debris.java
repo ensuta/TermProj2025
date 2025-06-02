@@ -8,24 +8,27 @@ import javax.swing.ImageIcon;
 
 public class Debris {
     private int x, y;
-    private int speed = 5;
-    private Image debrisImage;
+    private int width, height;
+    private Image image;
 
-    public Debris(int x, int y) {
+    public Debris(int x, int y, int width, int height, Image image) {
         this.x = x;
         this.y = y;
-        this.debrisImage = new ImageIcon("image/debris.png").getImage();
-    }
-
-    public void moveDown() {
-        y += speed;
+        this.width = width;
+        this.height = height;
+        this.image = image;
     }
 
     public void draw(Graphics g) {
-        g.drawImage(debrisImage, x, y, null);
+        g.drawImage(image, x, y, width, height, null);
     }
 
     public Rectangle getBounds() {
-        return new Rectangle(x, y, debrisImage.getWidth(null), debrisImage.getHeight(null));
+        return new Rectangle(x, y, width, height);
+    }
+
+    // 충돌 체크용
+    public boolean collidesWith(Player player) {
+        return player.getBounds().intersects(this.getBounds());
     }
 }
