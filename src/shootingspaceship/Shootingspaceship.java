@@ -269,6 +269,11 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
             while (enemyList.hasNext()) {
                 Enemy enemy = enemyList.next();
                 enemy.move();
+                
+                // 적 총알 발사
+                enemy.tryToShoot();
+                enemy.updateEnemyShots(height);
+                
                 //적제거
                 if (enemy.isCollidedWithShot(shots)) {
                     enemyList.remove();
@@ -397,12 +402,29 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
             Enemy enemy = enemyList.next();
             enemy.draw(g);
             enemy.setEnemyImage(stageManager.getEnemyImagePathForStage()); //적이미지 불러옴
+            enemy.drawEnemyShots(g);
         }
+        
         for (int i = 0; i < shots.length; i++) {
             if (shots[i] != null) {
                 shots[i].drawShot(g);
             }
         }
+        
+        for (Enemy enemy : enemies) { // 모든 적에 대해 반복 
+            for (Shot s : enemy.getEnemyShots()) { // 각 적이 쏜 모든 총알에서 반복
+                if (player.isHitByShot(s)) { // 플레이어가 이 총알에 맞았다면
+                    s.collided(); // 총알 없앰
+                    player.decreasehealth(); // 플레이어 체력 감소
+                    if (player.getHealth() <= 0) { // 플레이어 체력 0 이하 되면 게임 오버
+                        JOptionPane.showMessageDialog(this, "Game Over!");
+                        System.exit(0); // 게임 종료
+                    }
+                }
+            }
+        }
+
+        
         if (boss != null) {
             boss.draw(g);
         }

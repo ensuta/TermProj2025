@@ -7,6 +7,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException; 
 import java.io.File; 
 import java.net.URL;
+import java.util.*;
+
 
 public class Enemy { 
 
@@ -22,7 +24,11 @@ public class Enemy {
     int currentFrame = 0; // 현재 보여줄 프레임 인덱스(0번 프레임)
     long lastFrameTime = 0; // 마지막으로프레임이 전환된 시간 -> System.currentTImeMillis() 기준 시간 저장
     int frameDelay = 300; // 프레임 전환 간의 지연 시간 0.3초마다 다음 프레임으로 애니메이션 전환 
-   
+    
+    private long lastShotTime = 0; // 마지막으로 총을 쏜 시점 기록
+    private long shotInterval = 1000; // 적이 1초마다 총알 발사
+    private List<Shot> enemyShots = new ArrayList<>(); //적이 발사한 모든 총알 담는 리스트 
+
     
     public Enemy(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc) {
         x_pos = x; 
@@ -70,6 +76,37 @@ public class Enemy {
     public float getY() {
         return y_pos;
     }
+    
+    public void tryToShoot() { // 일정 간격으로 적이 총을 발사하도록하는 메소드
+        long currentTime = System.currentTimeMillis(); // 현재 시간 밀리초 가져오기
+        if (currentTime - lastShotTime >= shotInterval) { // 마지막 발사 시점 후 일정시간 지나면
+            enemyShots.add(new Shot((int) x_pos + 40 / 2, (int) y_pos + 40, 1)); //적의 중앙 아래에서 총알 생성 후 리스트에 추가
+            lastShotTime = currentTime; //마지막 발사시간 갱신 
+        }
+    }
+
+    public List<Shot> getEnemyShots() { // 적이 발사한 총알 리스트 반환하는 메소드
+        return enemyShots;
+    }
+
+    public void updateEnemyShots(int heightLimit) { // 적 총알들을 이동시키고, 화면을 벗어나거나 죽은 총알 제거하는 메소드
+        Iterator<Shot> iter = enemyShots.iterator(); // 총알리스트 반복하는 객체 생성 
+        while (iter.hasNext()) { 
+            Shot s = iter.next();
+            s.moveShot(2); // 아래로 2 픽셀 이동 (적이 쏘는 총알이므로 아래로 내려가도록 함)
+            if (s.getY() > heightLimit || !s.isAlive()) {
+                iter.remove();
+            }
+        }
+    }
+
+    public void drawEnemyShots(Graphics g) { //적 총알 화면에 그리는 메소드
+        g.setColor(Color.RED); //적 총알 색상 
+        for (Shot s : enemyShots) { 
+            s.drawShot(g); //각 총알 그리기
+        }
+    }
+
     //적이 총알과 충돌했는지 검사
     public boolean isCollidedWithShot(Shot[] shots) {
         for (Shot shot : shots) { 
