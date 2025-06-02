@@ -48,8 +48,11 @@ public class StageManager {
         backgroundImage = new ImageIcon(imgURL).getImage();  // 필드에 할당
         return backgroundImage;
     }
+    public int getMaxStage() { // 최대 스테이지 가져오기
+        return maxStage;
+    }
     
-    public int getCurrentStage() {
+    public int getCurrentStage() {  // 현재 스테이지 가져오기
         return currentStage; 
     }
 

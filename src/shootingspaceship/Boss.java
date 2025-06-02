@@ -8,12 +8,11 @@ import java.io.IOException;
 public class Boss extends Enemy { 
     private int health; 
     protected int maxHealth;
-    
     private final Color bossColor = Color.RED; // 보스의 색상
-    BufferedImage bossImage; 
-    //private static final String shark_IMAGE_PATH = "src\\shootingspaceship\\image\\shark_128x128.png"; 
+    BufferedImage bossImage;
+  
+    public Boss(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc, String imagePath, int i){
 
-    public Boss(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc, String imagePath){
         super(x, y, delta_x, delta_y, max_x, max_y, delta_y_inc); 
         try {
             bossImage = ImageIO.read(new File("src\\shootingspaceship\\image\\"+imagePath)); 
@@ -32,6 +31,9 @@ public class Boss extends Enemy {
     public void setBossImage(Image img) {
     	this.bossImage = (BufferedImage) img;
     }
+    public Bomb shootBomb() {    //1페이지 폭탄발사 패턴
+        return new Bomb((int)x_pos, (int)y_pos + 20, 3);
+    }
 
     @Override
     public void draw(Graphics g) { 
@@ -40,7 +42,7 @@ public class Boss extends Enemy {
             int imgH = bossImage.getHeight(); 
             g.drawImage(bossImage, (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null); 
             g.setColor(bossColor);
-            
+          
             //체력바 그리기
             int barWidth = imgW; //체력바 너비는 보스 이미지 너비와 동
             int barHeight = 10; //체력바 높이는 고정값으로 설정 (10픽셀)
@@ -65,6 +67,14 @@ public class Boss extends Enemy {
             //체력 숫자
             g.setColor(Color.WHITE);
             g.drawString(health + "/" + maxHealth, barX + 5, barY - 2); //체력 숫자를 흰색으로 표시   
+            
+        }else { // 이미지가 없으면, 아마 의미없음
+            g.setColor(bossColor); 
+            int[] x_poly = {(int) x_pos, (int) x_pos - 15, (int) x_pos, (int) x_pos + 15}; 
+            int[] y_poly = {(int) y_pos + 20, (int) y_pos, (int) y_pos + 15, (int) y_pos}; 
+            g.fillPolygon(x_poly, y_poly, 4); 
+            g.setColor(Color.WHITE); 
+            g.drawString("Health: " + health, (int) x_pos - 20, (int) y_pos - 10);
         }
     }
 
