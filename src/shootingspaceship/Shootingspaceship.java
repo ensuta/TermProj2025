@@ -29,10 +29,10 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private CharacterType selectedCharacter; // 선택된 캐릭터 유형
 
     //각종 파라미터
-    private final int width = 500;
-    private final int height = 500;
+    private final int width = 1280;
+    private final int height = 720;
     //플레이어
-    private final int shotSpeed = -2; // 총알 자체의 y축 이동 속도 (캐릭터와 무관)
+    private final int shotSpeed = -5; // 총알 자체의 y축 이동 속도 (캐릭터와 무관)
     private int maxShotNum = 10000;
     private final int playerMargin = 10;
     
@@ -41,7 +41,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
     
     //적
     private final int enemyMaxDownSpeed = 1;
-    private final int enemyMaxHorizonSpeed = 1;
+    private final int enemyMaxHorizonSpeed = 2;
     private final float enemyDownSpeedInc = 0.5f;//적수직속도 증가량
     //적 난이도?
     private final int enemyTimeGap = 500;
@@ -72,6 +72,12 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private boolean showWindEffect = false;
     private long windEffectEndTime = 0;
     
+    private final float[] enemySpeedPerStage = {1.0f, 1.5f, 2.0f, 2.5f, 3.0f};
+
+    public float getEnemySpeedForStage() {
+        return enemySpeedPerStage[stageManager.getCurrentStage() - 1];
+    }
+    
     public Shootingspaceship(CharacterType selectedCharacterFromMain) {
         this.selectedCharacter = selectedCharacterFromMain;
         currentPlayerMoveSpeed = this.selectedCharacter.moveSpeed;
@@ -84,12 +90,16 @@ public class Shootingspaceship extends JPanel implements Runnable {
         timer = new javax.swing.Timer(enemyTimeGap, new addANewEnemy()); 
         timer.start(); 
         addKeyListener(new ShipControl()); 
-        setFocusable(true); 
+        setFocusable(true);
         requestFocusInWindow();
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
                 shooting = false;
+                playerMoveLeft = false;
+                playerMoveRight = false;
+                playerMoveUp = false;
+                playerMoveDown = false;
             }
         });
         bossThreshold = stageManager.getEnemyCountForStage(); // 보스등장조건
@@ -281,6 +291,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
                     if (!bossAppear) {
                         --bossThreshold;
                         --enemySize;
+                        System.out.println("보스 등장까지 남은 처치 수: " + bossThreshold);
                         if (bossThreshold <= 0 && !bossAppear) {
                             needClearEnemies = true;
                             spawnBoss();
@@ -460,6 +471,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         frame.getContentPane().add(ship);
         frame.pack();
         frame.setVisible(true);
+        ship.requestFocusInWindow(); // ← 반드시 추가!
         ship.start();
     }
 }

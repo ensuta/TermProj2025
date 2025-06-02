@@ -7,7 +7,7 @@ public class Shot {
     private int x_pos;
     private int y_pos;
     private boolean alive;
-    private final int radius = 3;
+    private final int radius = 15;
     private int damage = 1; // 기본 데미지
 
     public Shot(int x, int y) {
@@ -40,7 +40,7 @@ public class Shot {
         if (!alive) {
             return;
         }
-        g.setColor(Color.yellow);
+        g.setColor(Color.RED);
         g.fillOval(x_pos, y_pos, radius, radius);
     }
 

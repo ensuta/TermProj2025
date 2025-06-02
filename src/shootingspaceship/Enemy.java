@@ -16,7 +16,7 @@ public class Enemy {
     int max_x; 
     int max_y; 
     float delta_y_inc; 
-    final int collision_distance = 10;
+    final int collision_distance = 30;
     BufferedImage enemyImage; 
     private static final String babyshark_IMAGE_PATH = "src\\shootingspaceship\\image\\babyshark_64x64.png";
     //스테이지마다 적과 보스의 이미지가 달라져야하는데.... 모르겟음
