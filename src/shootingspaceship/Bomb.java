@@ -72,26 +72,23 @@ public class Bomb extends Enemy{
     	}
     }
     
-    @Override
-    public Rectangle getBounds() {
-    	int width = (bombImage != null) ? bombImage.getWidth() : 32;   // 기본값 32
-        int height = (bombImage != null) ? bombImage.getHeight() : 32;
-        return new Rectangle(x, y, width, height);
-    }
+//    @Override
+//    public Rectangle getBounds() {
+//    	int width = (bombImage != null) ? bombImage.getWidth() : 32;   // 기본값 32
+//        int height = (bombImage != null) ? bombImage.getHeight() : 32;
+//        return new Rectangle(x, y, width, height);
+//    }
     
     @Override
     public boolean isCollidedWithPlayer(Player player) {
-//        if (bombImage == null) {
-//        	return false;
-//        }
+        if (bombImage == null) {
+        	return false;
+        }
 
         Rectangle bombBounds = new Rectangle((int)x, (int)y, bombImage.getWidth(), bombImage.getHeight());
         Rectangle playerBounds = player.getBounds();
 
-        if (bombBounds.intersects(playerBounds)) {
-            System.out.println("플레이어와 충돌!");
-            return true;
-        }
+        
         return false;
     }
     
@@ -112,15 +109,6 @@ public class Bomb extends Enemy{
     		g.setColor(Color.YELLOW);
             g.fillOval((int)x, (int)y, WIDTH, HEIGHT);
     	}
-    }
-    
-    //패링 설정 메소드
-    public void setParryable(boolean parryable) {
-    	this.isParryable = parryable;
-    }
-    
-    public boolean isParryable() {
-    	return isParryable;
     }
     
     public void setColor(Color color) {
