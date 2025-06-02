@@ -7,8 +7,8 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
-public class Shootingspaceship extends JPanel implements Runnable, FocusListener {//게임클래스
 
+public class Shootingspaceship extends JPanel implements Runnable {
     private Player player;
     private Shot[] shots;
     private ArrayList<Enemy> enemies;
@@ -25,18 +25,20 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
     private Graphics dbg;
     private Random rand;
     private StageManager stageManager;
+    
+    private CharacterType selectedCharacter; // 선택된 캐릭터 유형
 
     //각종 파라미터
     private final int width = 500;
     private final int height = 500;
     //플레이어
-    private final int shotSpeed = -2;
+    private final int shotSpeed = -2; // 총알 자체의 y축 이동 속도 (캐릭터와 무관)
     private int maxShotNum = 10000;
     private final int playerMargin = 10;
-    private final int playerLeftSpeed = -2;
-    private final int playerRightSpeed = 2;
-    protected final int playerUpSpeed = -2;
-    protected final int playerDownSpeed = 2;
+    
+    private int currentPlayerMoveSpeed;
+    private int currentShotInterval;
+    
     //적
     private final int enemyMaxDownSpeed = 1;
     private final int enemyMaxHorizonSpeed = 1;
@@ -51,7 +53,6 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
     // 총알 연사 관련
     private boolean shooting = false;
     private long lastShotTime = 0;
-    private int shotInterval = 50; // 총알 발사 간격
 
     //배경 이미지
     private Image backgroundImg;
@@ -71,28 +72,38 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
     private boolean showWindEffect = false;
     private long windEffectEndTime = 0;
     
-    public Shootingspaceship() {//생성자
-        stageManager = new StageManager(); 
-        shots = new Shot[ maxShotNum ]; 
+    public Shootingspaceship(CharacterType selectedCharacterFromMain) {
+        this.selectedCharacter = selectedCharacterFromMain;
+        currentPlayerMoveSpeed = this.selectedCharacter.moveSpeed;
+        currentShotInterval = this.selectedCharacter.shotInterval; 
+        stageManager = new StageManager();
+        shots = new Shot[maxShotNum];
         enemies = new ArrayList<Enemy>(); 
         enemySize = 0; 
         rand = new Random(1); 
         timer = new javax.swing.Timer(enemyTimeGap, new addANewEnemy()); 
         timer.start(); 
-        this.addKeyListener(new ShipControl());
-        this.setFocusable(true); // 이미 설정되어 있어야 함
-        this.addFocusListener(this); // FocusListener 등록
+        addKeyListener(new ShipControl()); 
+        setFocusable(true); 
+        requestFocusInWindow();
+        addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                shooting = false;
+            }
+        });
         bossThreshold = stageManager.getEnemyCountForStage(); // 보스등장조건
 
 
         setBackground(Color.black); // background color
         setPreferredSize(new Dimension(width, height)); // game size
-        player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin,  0, height-playerMargin); // 플레이어 생성
+
+        player = new Player(width / 2, (int) (height * 0.9), playerMargin, width-playerMargin,  0, height-playerMargin, this.selectedCharacter.bulletDamage);
 
         try {
-        	backgroundImg = ImageIO.read(getClass().getResource("/shootingspaceship/Image/gamesky.jpg"));
+            backgroundImg = ImageIO.read(getClass().getResource("/shootingspaceship/Image/gamesky.jpg"));
         } catch (IOException e) {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
     }
 
@@ -119,7 +130,7 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
                 case KeyEvent.VK_Z:
                     shooting = true;
                     break;
-                case KeyEvent.VK_B:  // B 키로 폭탄 사용
+                case KeyEvent.VK_B:  
                 	useBombTriggered = true;
                     break;
             }
@@ -145,8 +156,7 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
             }
         }
 
-        public void keyTyped(KeyEvent e) {
-        }
+        public void keyTyped(KeyEvent e) {}
     }
 
 
@@ -199,15 +209,13 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
     }
 
     
-    public void run() { //루프
+    public void run() { 
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-        this.requestFocusInWindow(); // 게임 시작 시 포커스 요청
 
         while (true) {
-        	// 총알 이동, 밖으로 나간 총알 제거
             if (shooting) {
                 long now = System.currentTimeMillis();
-                if (now - lastShotTime > shotInterval) {
+                if (now - lastShotTime > currentShotInterval) { // 수정됨
                     for (int i = 0; i < shots.length; i++) {
                         if (shots[i] == null) {
                             shots[i] = player.generateShot();
@@ -235,7 +243,6 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
             }
             
           
-          //추가기능(플레이어 ClearBomb)
             if (useBombTriggered && player.getScreenBombCount() > 0) {
                 useBombTriggered = false; // 다시 false로 꺼줌 (1번만 발동되도록)
                 player.useScreenBomb(); // 폭탄 1회 차감
@@ -248,17 +255,20 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
                 bossShots.clear();    // 보스 공격 등도 제거할 수 있음
             }
 
-            //이동 처리
-            if (playerMoveLeft) {
-                player.moveX(playerLeftSpeed);
-            } else if (playerMoveRight) {
-                player.moveX(playerRightSpeed);
-            } else if (playerMoveUp) {
-            	player.moveY(playerUpSpeed);
-            } else if (playerMoveDown) {
-            	player.moveY(playerDownSpeed);
-            }
 
+            // 수평 이동
+            if (playerMoveLeft && !playerMoveRight) {
+                player.moveX(-currentPlayerMoveSpeed); 
+            } else if (playerMoveRight && !playerMoveLeft) {
+                player.moveX(currentPlayerMoveSpeed);  
+            }
+            // 수직 이동
+            if (playerMoveUp && !playerMoveDown) {
+                player.moveY(-currentPlayerMoveSpeed); 
+            } else if (playerMoveDown && !playerMoveUp) {
+                player.moveY(currentPlayerMoveSpeed); 
+            }
+            
             boolean needClearEnemies = false;
             Iterator<Enemy> enemyList = enemies.iterator();
 
@@ -271,8 +281,6 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
                     if (!bossAppear) {
                         --bossThreshold;
                         --enemySize;
-                        System.out.println("남은 보스 등장 처치 조건: " + bossThreshold);
-                        //보스등장
                         if (bossThreshold <= 0 && !bossAppear) {
                             needClearEnemies = true;
                             spawnBoss();
@@ -317,26 +325,12 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
 
                         // 다음 스테이지로 진행
                         if (!stageManager.isFinalStage()) {
-                            // 키 입력 상태 강제 초기화
-                            playerMoveLeft = false;
-                            playerMoveRight = false;
-                            playerMoveUp = false;
-                            playerMoveDown = false;
-                            shooting = false;
-
                             stageManager.advanceStage();
                             JOptionPane.showMessageDialog(this, "다음 스테이지로 진행: " + stageManager.getCurrentStage());
-                            this.requestFocusInWindow(); // 포커스 재요청
-
                             bossThreshold = stageManager.getEnemyCountForStage();
                             enemySize = 0;
                             enemies.clear();
-                            // 타이머 재시작 전에 적 생성 로직이 중복 실행되지 않도록 bossAppear 상태를 다시 확인하거나,
-                            // 타이머 시작 로직을 spawnBoss 이후로 옮기는 것을 고려할 수 있습니다.
-                            // 현재 구조에서는 timer.start()가 적절해 보입니다.
-                            if (timer != null && !timer.isRunning()) { // 타이머가 중지된 경우에만 시작
-                                timer.start();
-                            }
+                            timer.start();
                         } else {
                             // 마지막 스테이지 클리어 시
                             JOptionPane.showMessageDialog(this, "게임 클리어!");
@@ -367,15 +361,6 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
     }
     
     
-    //화면 내 enemy 처치하는 ClearBomb
-    public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-
-        if (key == KeyEvent.VK_B) { //B키로 폭탄 사용
-        	player.useBomb(enemies, bombs);   //기존의 적, 적폭탄 리스트 전달
-        }
-    }
-
 
     public void initImage(Graphics g) {
         if (dbImage == null) {
@@ -387,81 +372,95 @@ public class Shootingspaceship extends JPanel implements Runnable, FocusListener
 
         dbg.setColor(getForeground());
 
-        g.drawImage(dbImage, 0, 0, this);
+        // 배경 이미지를 먼저 그리기 위해, dbg에 그린 후 마지막에 g.drawImage로 출력합니다.
+        if (backgroundImg != null) {
+            dbg.drawImage(backgroundImg, 0, 0, this.getSize().width, this.getSize().height, this);
+        } else { // 배경 이미지가 로드되지 않은 경우 검은색으로 채움
+            dbg.setColor(Color.BLACK);
+            dbg.fillRect(0, 0, this.getSize().width, this.getSize().height);
+        }
     }
 
 
     public void paintComponent(Graphics g) {
-        // 각종 그리기
-        initImage(g);
-        player.drawPlayer(g);
+        // 더블 버퍼링을 위한 이미지 준비
+        if (dbImage == null) {
+            dbImage = createImage(this.getSize().width, this.getSize().height);
+            dbg = dbImage.getGraphics();
+        }
+
+        if (backgroundImg != null) {
+            dbg.drawImage(backgroundImg, 0, 0, this.getSize().width, this.getSize().height, this);
+        } else {
+            dbg.setColor(Color.BLACK);
+            dbg.fillRect(0, 0, this.getSize().width, this.getSize().height);
+        }
+        
+        player.drawPlayer(dbg);
         Iterator<Enemy> enemyList = enemies.iterator();
         while (enemyList.hasNext()) {
             Enemy enemy = enemyList.next();
-            enemy.draw(g);
+            enemy.draw(dbg);
         }
         for (int i = 0; i < shots.length; i++) {
             if (shots[i] != null) {
-                shots[i].drawShot(g);
+                shots[i].drawShot(dbg);
             }
         }
         if (boss != null) {
-            boss.draw(g);
+            boss.draw(dbg);
         }
 
         for (int i = 0; i < bombs.size(); i++) {
             if (bombs.get(i) != null) {
-                bombs.get(i).drawBomb(g);
+                bombs.get(i).drawBomb(dbg);
             }
         }
         
         if(showWindEffect) {
-        	if(System.currentTimeMillis() > windEffectEndTime) {
-        		showWindEffect = false;
-        	}
+            if(System.currentTimeMillis() > windEffectEndTime) {
+                showWindEffect = false;
+            }
         }
         
         //추가기능(플레이어가 쓰는 폭탄 개수)
-        g.setColor(Color.YELLOW);
-        g.setFont(new Font("Arial", Font.BOLD, 16));
-        g.drawString("Bombs Left: " + player.getScreenBombCount(), 0, 40);
+        dbg.setColor(Color.YELLOW);
+        dbg.setFont(new Font("Arial", Font.BOLD, 16));
+        dbg.drawString("Bombs Left: " + player.getScreenBombCount(), 0, 40);
         
         if(stageManager.getCurrentStage() == stageManager.getMaxStage()) {
-        	g.setColor(new Color(135, 206, 250, 128));
-        	g.fillRect(0, 0, getWidth(), getHeight());
-        	g.setColor(Color.BLUE);
-        	g.drawString("wind!", getWidth() / 2 - 20, 50);
-        	
+            dbg.setColor(new Color(135, 206, 250, 128));
+            dbg.fillRect(0, 0, getWidth(), getHeight());
+            dbg.setColor(Color.BLUE);
+            dbg.drawString("wind!", getWidth() / 2 - 20, 50);
+            
        }
         // 스테이지 정보
-        g.setColor(Color.WHITE);
-        g.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
+        dbg.setColor(Color.WHITE);
+        dbg.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
+        g.drawImage(dbImage, 0, 0, this);
     }
 
 
     public static void main(String[] args) {
+
+        CharacterType[] characterOptions = CharacterType.values();
+        CharacterType chosenCharacter = (CharacterType) JOptionPane.showInputDialog(
+                null, 
+                "플레이할 캐릭터를 선택하세요:", 
+                "캐릭터 선택",
+                JOptionPane.PLAIN_MESSAGE, 
+                null, // icon
+                characterOptions, 
+                characterOptions[0] 
+        );
         JFrame frame = new JFrame("Shooting");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        Shootingspaceship ship = new Shootingspaceship();
+        Shootingspaceship ship = new Shootingspaceship(chosenCharacter);
         frame.getContentPane().add(ship);
         frame.pack();
         frame.setVisible(true);
         ship.start();
     }
-
-	@Override
-	public void focusGained(FocusEvent e) {
-	}
-
-	@Override
-	public void focusLost(FocusEvent e) {
-		// 포커스를 잃었을 때 모든 입력 강제로 false로 설정
-		playerMoveLeft = false;
-		playerMoveRight = false;
-		playerMoveUp = false;
-		playerMoveDown = false;
-		shooting = false;
-
-	}
 }
 

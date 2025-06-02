@@ -6,6 +6,7 @@ import java.util.List;
 import java.awt.Color;
 
 public class Player {
+    private int bulletDamage;
     private int x_pos;
     private int y_pos;
     private int min_x;
@@ -23,13 +24,14 @@ public class Player {
     //추가기능(장애물 패턴용 이전 위치 저장)
     private int prevX, prevY;
 
-    public Player(int x, int y, int min_x, int max_x, int min_y, int max_y) {
+    public Player(int x, int y, int min_x, int max_x, int min_y, int max_y, int bulletDamage) {
         x_pos = x;
         y_pos = y;
         this.min_x = min_x;
         this.max_x = max_x;
         this.min_y = min_y;
         this.max_y = max_y;
+        this.bulletDamage = bulletDamage;
     }
 
     public void moveX(int speed) {
@@ -107,7 +109,7 @@ public class Player {
     }
 
     public Shot generateShot() {
-        return new Shot(x_pos, y_pos, 5);
+        return new Shot(x_pos, y_pos, this.bulletDamage); // 캐릭터별 데미지 사용
     }
 
     public void drawPlayer(Graphics g) {
