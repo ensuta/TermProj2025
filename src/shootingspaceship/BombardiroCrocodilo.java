@@ -1,4 +1,4 @@
-package shootingspaceship;
+/*package shootingspaceship;
 
 import java.awt.Graphics;
 import java.util.ArrayList;
@@ -75,4 +75,5 @@ public class BombardiroCrocodilo extends Boss {
 	    player.freeze(2000);         // 2초 동안 정지
 	    windEffectCallback.run();    // GUI에 바람 이펙트 나타나게 함
 	}
-}
+}*/
+//이 클래스는 제외(삭제해도 됨)
