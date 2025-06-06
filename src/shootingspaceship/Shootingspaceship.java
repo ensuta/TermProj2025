@@ -58,7 +58,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
     
 
     public Shootingspaceship() {//생성자
-    	MusicPlayer.playLoop("sounds/backgroundmusic.wav"); // 배경음악 재생
+    	MusicPlayer.playBackgroundMusic("sounds/backgroundmusic.wav"); // 배경음악 재생
         stageManager = new StageManager(); 
         shots = new Shot[ maxShotNum ]; 
         enemies = new ArrayList<Enemy>(); 
@@ -323,6 +323,7 @@ public class Shootingspaceship extends JPanel implements Runnable {//게임클�
         // 각종 그리기
         initImage(g);
         player.drawPlayer(g);
+        player.drawHealth(g);
         Iterator<Enemy> enemyList = enemies.iterator();
         while (enemyList.hasNext()) {
             Enemy enemy = enemyList.next();
