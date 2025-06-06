@@ -19,7 +19,7 @@ public class Enemy {
     int max_x; 
     int max_y; 
     float delta_y_inc; 
-    final int collision_distance = 10;
+    final int collision_distance = 30;
     BufferedImage[] enemyImage; //이미지 파일 BufferedImage 객체 배열로 만들어서 애니메이션 효과줌
     int currentFrame = 0; // 현재 보여줄 프레임 인덱스(0번 프레임)
     long lastFrameTime = 0; // 마지막으로프레임이 전환된 시간 -> System.currentTImeMillis() 기준 시간 저장
@@ -29,7 +29,6 @@ public class Enemy {
     private long shotInterval = 1000; // 적이 1초마다 총알 발사
     private List<Shot> enemyShots = new ArrayList<>(); //적이 발사한 모든 총알 담는 리스트 
 
-    
     public Enemy(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc) {
         x_pos = x; 
         y_pos = y; 
@@ -154,7 +153,6 @@ public class Enemy {
     }
 
 	public Rectangle getBounds() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }
