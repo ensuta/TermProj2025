@@ -178,7 +178,9 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
                 //최종출력
                 Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
-                enemies.add(newEnemy);
+                synchronized (enemies) {
+                    enemies.add(newEnemy);
+                }
                 ++enemySize;
 
             }
@@ -251,14 +253,20 @@ public class Shootingspaceship extends JPanel implements Runnable {
             if (useBombTriggered && player.getScreenBombCount() > 0) {
                 useBombTriggered = false; // 다시 false로 꺼줌 (1번만 발동되도록)
                 player.useScreenBomb(); // 폭탄 1회 차감
-
+                
                 // 적 제거
-                enemies.clear();
+			    synchronized (enemies){            
+			    	enemies.clear();
+			    }
 
                 // 보스 탄 등 제거
-                activeBombs.clear();  // 화면에 떠 있는 폭탄이 있다면
-                bossShots.clear();    // 보스 공격 등도 제거할 수 있음
-            }
+			    synchronized (activeBombs){
+			    	activeBombs.clear();  // 화면에 떠 있는 폭탄이 있다면
+			    }
+			    synchronized (bossShots){	
+			    	bossShots.clear();    // 보스 공격 등도 제거할 수 있음
+			    }
+			}
 
 
             // 수평 이동
@@ -275,39 +283,50 @@ public class Shootingspaceship extends JPanel implements Runnable {
             }
             
             boolean needClearEnemies = false;
-            Iterator<Enemy> enemyList = enemies.iterator();
 
-            while (enemyList.hasNext()) {
-                Enemy enemy = enemyList.next();
-                enemy.move();
-                //적제거
-                if (enemy.isCollidedWithShot(shots)) {
-                    enemyList.remove();
-                    if (!bossAppear) {
-                        --bossThreshold;
-                        --enemySize;
-                        System.out.println("보스 등장까지 남은 처치 수: " + bossThreshold);
-                        if (bossThreshold <= 0 && !bossAppear) {
-                            needClearEnemies = true;
-                            spawnBoss();
-                            timer.stop();
-                            break; 
-                        }
-                    }
-                }
-                // 게임종료
-                if (enemy.isCollidedWithPlayer(player)) {
-                    enemyList.remove();
-                    JOptionPane.showMessageDialog(this, "게임오버: 플레이어와 충돌");
-                    System.exit(0);
-                }
-                if (enemy.getY() >= height) {
-                    JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
-                    System.exit(0);
-                }
-                
+            synchronized (enemies) {
+	            Iterator<Enemy> enemyList = enemies.iterator();
+	
+	            while (enemyList.hasNext()) {
+	                Enemy enemy = enemyList.next();
+	                enemy.move();
+	                
+	                // 적 총알 발사
+	                enemy.tryToShoot();
+	                enemy.updateEnemyShots(height);
+	                
+	                //적제거
+	                if (enemy.isCollidedWithShot(shots)) {
+	                    enemyList.remove();
+	                    if (!bossAppear) {
+	                        --bossThreshold;
+	                        --enemySize;
+	                        System.out.println("남은 보스 등장 처치 조건: " + bossThreshold);
+	                        //보스등장
+	                        if (bossThreshold <= 0 && !bossAppear) {
+	                            needClearEnemies = true;
+	                            spawnBoss();
+	                            timer.stop();
+	                            break; 
+	                        }
+	                    }
+	                }
+	                // 게임종료
+	                if (enemy.isCollidedWithPlayer(player)) {
+	                    enemyList.remove();
+	                    JOptionPane.showMessageDialog(this, "게임오버: 플레이어와 충돌");
+	                    System.exit(0);
+	                }
+	                if (enemy.getY() >= height) {
+	                    JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
+	                    System.exit(0);
+	                }
+	                
+	            }
+  
             }
             if (needClearEnemies) {
+            	
                 enemies.clear();
                 enemySize = 0;
             }
@@ -335,7 +354,9 @@ public class Shootingspaceship extends JPanel implements Runnable {
                             JOptionPane.showMessageDialog(this, "다음 스테이지로 진행: " + stageManager.getCurrentStage());
                             bossThreshold = stageManager.getEnemyCountForStage();
                             enemySize = 0;
-                            enemies.clear();
+                            synchronized (enemies) {
+                                enemies.clear();
+                            }
                             timer.start();
                         } else {
                             // 마지막 스테이지 클리어 시
@@ -366,7 +387,18 @@ public class Shootingspaceship extends JPanel implements Runnable {
         }
     }
     
-    
+    //화면 내 enemy 처치하는 ClearBomb
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+
+        if (key == KeyEvent.VK_B) { //B키로 폭탄 사용
+        	synchronized (enemies) {
+                synchronized (bombs) { // bombs 리스트도 수정될 수 있으므로 중첩 동기화
+                    player.useBomb(enemies, bombs);   //기존의 적, 적폭탄 리스트 전달
+                }
+            } //기존의 적, 적폭탄 리스트 전달
+        }
+    }
 
     public void initImage(Graphics g) {
         if (dbImage == null) {
@@ -395,55 +427,88 @@ public class Shootingspaceship extends JPanel implements Runnable {
             dbg = dbImage.getGraphics();
         }
 
+        // 배경 그리기 (from main branch logic)
         if (backgroundImg != null) {
             dbg.drawImage(backgroundImg, 0, 0, this.getSize().width, this.getSize().height, this);
         } else {
             dbg.setColor(Color.BLACK);
             dbg.fillRect(0, 0, this.getSize().width, this.getSize().height);
         }
-        
-        player.drawPlayer(dbg);
-        Iterator<Enemy> enemyList = enemies.iterator();
-        while (enemyList.hasNext()) {
-            Enemy enemy = enemyList.next();
-            enemy.draw(dbg);
+
+        // Stage-specific background image (from SEB branch logic, drawing over backgroundImg)
+        Image bg = stageManager.getBackgroundImage();
+        if (bg != null) {
+            dbg.drawImage(bg, 0, 0, width, height, this);
         }
+
+        player.drawPlayer(dbg); // Now drawing on dbg
+
+        synchronized (enemies) {
+            Iterator<Enemy> enemyList = enemies.iterator();
+            while (enemyList.hasNext()) {
+                Enemy enemy = enemyList.next();
+                enemy.draw(dbg); // Now drawing on dbg
+                enemy.setEnemyImage(stageManager.getEnemyImagePathForStage()); //적이미지 불러옴
+            }
+        }
+
         for (int i = 0; i < shots.length; i++) {
             if (shots[i] != null) {
                 shots[i].drawShot(dbg);
             }
         }
+
+        synchronized (enemies) {
+            for (Enemy enemy : enemies) { // 모든 적에 대해 반복
+                for (Shot s : enemy.getEnemyShots()) { // 각 적이 쏜 모든 총알에서 반복
+                        s.drawShot(dbg); // Now drawing on dbg
+                    if (player.isHitByShot(s)) { // 플레이어가 이 총알에 맞았다면
+                        s.collided(); // 총알 없앰
+                        player.decreasehealth(); // 플레이어 체력 감소
+                        if (player.getHealth() <= 0) { // 플레이어 체력 0 이하 되면 게임 오버
+                            JOptionPane.showMessageDialog(this, "Game Over!");
+                            System.exit(0); // 게임 종료
+                        }
+                    }
+                }
+            }
+        }
+
         if (boss != null) {
             boss.draw(dbg);
         }
 
-        for (int i = 0; i < bombs.size(); i++) {
-            if (bombs.get(i) != null) {
-                bombs.get(i).drawBomb(dbg);
+        synchronized(bombs) {
+            for (int i = 0; i < bombs.size(); i++) {
+                if (bombs.get(i) != null) {
+                    bombs.get(i).drawBomb(dbg);
+                }
             }
         }
-        
+
         if(showWindEffect) {
             if(System.currentTimeMillis() > windEffectEndTime) {
                 showWindEffect = false;
             }
         }
-        
+
         //추가기능(플레이어가 쓰는 폭탄 개수)
         dbg.setColor(Color.YELLOW);
         dbg.setFont(new Font("Arial", Font.BOLD, 16));
         dbg.drawString("Bombs Left: " + player.getScreenBombCount(), 0, 40);
-        
+
         if(stageManager.getCurrentStage() == stageManager.getMaxStage()) {
             dbg.setColor(new Color(135, 206, 250, 128));
             dbg.fillRect(0, 0, getWidth(), getHeight());
             dbg.setColor(Color.BLUE);
             dbg.drawString("wind!", getWidth() / 2 - 20, 50);
-            
-       }
+
+        }
         // 스테이지 정보
         dbg.setColor(Color.WHITE);
         dbg.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
+
+        // 마지막에 준비된 이미지를 실제 화면에 그립니다.
         g.drawImage(dbImage, 0, 0, this);
     }
 

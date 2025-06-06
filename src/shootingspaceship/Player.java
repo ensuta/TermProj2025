@@ -24,7 +24,14 @@ public class Player {
     //추가기능(장애물 패턴용 이전 위치 저장)
     private int prevX, prevY;
 
+    //플레이어 피통 추가
+    private int health;
+    private final int PlayerHealth = 5;
+    
+    protected boolean isHit = false;
+    protected long hitTime = 0;
     public Player(int x, int y, int min_x, int max_x, int min_y, int max_y, int bulletDamage) {
+
         x_pos = x;
         y_pos = y;
         this.min_x = min_x;
@@ -32,6 +39,20 @@ public class Player {
         this.min_y = min_y;
         this.max_y = max_y;
         this.bulletDamage = bulletDamage;
+        this.health =  PlayerHealth;
+    }
+    
+    public void decreasehealth() { //
+    	long now = System.currentTimeMillis();
+    	if(now - hitTime > 1000) {
+    		--health;
+    		hitTime = now;
+    		isHit = true;
+    	}
+    }
+    
+    public int getHealth() { //health값 가져오는 메소드
+    	return health;
     }
 
     public void moveX(int speed) {
@@ -98,7 +119,14 @@ public class Player {
 
             System.out.println("폭탄 사용! 모든 적과 폭탄이 제거되었습니다.");
         }
-   }
+    }
+    
+    public boolean isHitByShot(Shot shot) { // 플레이어가 총알에 맞았는지 판단하는 메소드
+        Rectangle playerRect = new Rectangle(x_pos, y_pos, 40, 40); // 플레이어의 위치, 크기 기준으로 충돌 판정용 사각형 생성 
+        Rectangle shotRect = new Rectangle(shot.getX(), shot.getY(), 3, 3); // shot 크기와 동일한 작은 사각형 생
+        return playerRect.intersects(shotRect); // 두 사각형이 겹치는지 판단
+    }
+
 
     public int getX() {
         return x_pos;
@@ -117,5 +145,21 @@ public class Player {
         int[] x_poly = {x_pos, x_pos - 10, x_pos, x_pos + 10};
         int[] y_poly = {y_pos, y_pos + 15, y_pos + 10, y_pos + 15};
         g.fillPolygon(x_poly, y_poly, 4);
+        drawHealthBar(g);
+    }
+    
+    protected void drawHealthBar(Graphics g) {
+    	int barWidth = 10;
+    	int barHeight = 10;
+    	int spacing = 5;
+    	for (int i = 0; i < PlayerHealth; i++) {
+            if (i < health) {
+                g.setColor(Color.RED);
+            } else {
+                g.setColor(Color.GRAY);
+            }
+            g.fillRect(x_pos - 25 + i * (barWidth + spacing), y_pos + 50, barWidth, barHeight);
+        }
+    
     }
 }
