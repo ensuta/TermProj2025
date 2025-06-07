@@ -1,10 +1,11 @@
-package shootingspaceship.entites; 
+package shootingspaceship; 
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Color; 
 import javax.imageio.ImageIO; 
 import java.awt.image.BufferedImage; 
 import java.io.IOException; 
+import java.io.File; 
 import java.net.URL;
 import java.util.*;
 
@@ -23,15 +24,14 @@ public class Enemy {
     int currentFrame = 0; // 현재 보여줄 프레임 인덱스(0번 프레임)
     long lastFrameTime = 0; // 마지막으로프레임이 전환된 시간 -> System.currentTImeMillis() 기준 시간 저장
     int frameDelay = 300; // 프레임 전환 간의 지연 시간 0.3초마다 다음 프레임으로 애니메이션 전환 
-
+    
     private long lastShotTime = 0; // 마지막으로 총을 쏜 시점 기록
     private long shotInterval = 1000; // 적이 1초마다 총알 발사
-    private List<Shot> enemyShots = new ArrayList<>(); //적이 발사한 모든 총알 담는 리스트
-    private final int ENEMY_SHOT_SPEED = 5; // 적 총알 속도 상수 추가
+    private List<Shot> enemyShots = new ArrayList<>(); //적이 발사한 모든 총알 담는 리스트 
 
     public Enemy(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc) {
-        this.x_pos = x; 
-        this.y_pos = y; 
+        x_pos = x; 
+        y_pos = y; 
         this.delta_x = delta_x; 
         this.delta_y = delta_y; 
         this.max_x = max_x; 
@@ -43,10 +43,10 @@ public class Enemy {
     	try {
     		enemyImage = new BufferedImage[imagePath.length]; // 외부에서 전달받은 이미지 경로 개수만큼 bufferedImage 배열 생성
     		for(int i=0;i<imagePath.length;++i) { //각 이미지 돌면서 파일 로드
-    			String fullPath = "/shootingspaceship/resources/image/" + imagePath[i];
+    			String fullPath = "/shootingspaceship/image/" + imagePath[i]; 
     			URL imageURL = getClass().getResource(fullPath);
-    			if(imageURL == null) { 
-    				System.err.println("이미지 파일을 찾을 수 없습니다: " + fullPath); // 전체 경로 출력
+    			if(imageURL == null) { // 이미지 파일 존재하지 않는 경우
+    				System.err.println("이미지 파일을 찾을 수 없습니다.");
     				continue;
     			}
     			enemyImage[i] = ImageIO.read(imageURL);// 이미지 파일읽어서 BufferedImage 객체로 저장
@@ -61,21 +61,12 @@ public class Enemy {
         x_pos += delta_x; 
         y_pos += delta_y; 
 
-        // 화면 가장자리에 닿으면 튕겨나가도록 수정
-        if (x_pos <= 0) { 
+        if (x_pos < 0) { 
             x_pos = 0; 
             delta_x = -delta_x; 
-        } else if (x_pos >= max_x) { 
+        } else if (x_pos > max_x) { 
             x_pos = max_x; 
             delta_x = -delta_x; 
-        }
-
-        if (y_pos <= 0) {
-            y_pos = 0;
-            delta_y = -delta_y;
-        } else if (y_pos >= max_y) {
-            y_pos = max_y;
-            delta_y = -delta_y;
         }
     }
     public float getX() {
@@ -84,17 +75,12 @@ public class Enemy {
     public float getY() {
         return y_pos;
     }
-
+    
     public void tryToShoot() { // 일정 간격으로 적이 총을 발사하도록하는 메소드
         long currentTime = System.currentTimeMillis(); // 현재 시간 밀리초 가져오기
         if (currentTime - lastShotTime >= shotInterval) { // 마지막 발사 시점 후 일정시간 지나면
-            float directionX = delta_x;
-            float directionY = delta_y;
-            double magnitude = Math.sqrt(directionX * directionX + directionY * directionY);
-            int shotDeltaX = (int) ((directionX / magnitude) * ENEMY_SHOT_SPEED);
-            int shotDeltaY = (int) ((directionY / magnitude) * ENEMY_SHOT_SPEED);
-            enemyShots.add(new Shot((int) x_pos + 20, (int) y_pos + 40, 1, shotDeltaX, shotDeltaY));
-            lastShotTime = currentTime; //마지막 발사시간 갱신
+            enemyShots.add(new Shot((int) x_pos + 40 / 2, (int) y_pos + 40, 1)); //적의 중앙 아래에서 총알 생성 후 리스트에 추가
+            lastShotTime = currentTime; //마지막 발사시간 갱신 
         }
     }
 
@@ -106,8 +92,8 @@ public class Enemy {
         Iterator<Shot> iter = enemyShots.iterator(); // 총알리스트 반복하는 객체 생성 
         while (iter.hasNext()) { 
             Shot s = iter.next();
-            s.moveShot(); // 파라미터 없이 호출하도록 수정
-            if (s.getY() > heightLimit || !s.isAlive() || s.getX() < 0 || s.getX() > max_x) { // 화면 좌우도 체크
+            s.moveShot(2); // 아래로 2 픽셀 이동 (적이 쏘는 총알이므로 아래로 내려가도록 함)
+            if (s.getY() > heightLimit || !s.isAlive()) {
                 iter.remove();
             }
         }

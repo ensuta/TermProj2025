@@ -1,21 +1,17 @@
-package shootingspaceship.entites;
+package shootingspaceship;
 
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.List;
-
-import shootingspaceship.audio.SoundPlayer; // 변경된 import 경로
-
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.geom.Path2D;
+
+
 
 public class Player {
-    // 플레이어 방향 열거형 추가
-    public enum Direction {
-        UP, DOWN, LEFT, RIGHT
-    }
-    private Direction currentDirection = Direction.UP; // 기본 방향은 위쪽
-    private boolean directionChangedSinceLastShot = false; // 방향 변경 추적 플래그
-
     private int bulletDamage;
     private int x_pos;
     private int y_pos;
@@ -50,8 +46,6 @@ public class Player {
         this.max_y = max_y;
         this.bulletDamage = bulletDamage;
         this.health =  PlayerHealth;
-        this.currentDirection = Direction.UP; // 생성 시 기본 방향 설정
-        this.directionChangedSinceLastShot = false; // 초기화
     }
     
     public void decreasehealth() { //
@@ -148,70 +142,15 @@ public class Player {
         return y_pos;
     }
 
-    // 방향 설정 메소드 추가
-    public void setDirection(Direction direction) {
-        if (this.currentDirection != direction) {
-            this.directionChangedSinceLastShot = true;
-        }
-        this.currentDirection = direction;
-    }
-
-    public Direction getDirection() {
-        return this.currentDirection;
-    }
-
     public Shot generateShot() {
-    	SoundPlayer.playSound("/shootingspaceship/resources/sounds/gunshot.wav");
-        // 현재 방향에 따라 총알의 deltaX, deltaY 설정
-        int shotDeltaX = 0;
-        int shotDeltaY = 0;
-        int shotBaseSpeed = 10; // 총알 기본 속도 (플레이어 속도보다 빠르게 설정)
-
-        switch (currentDirection) {
-            case UP:
-                shotDeltaY = -shotBaseSpeed;
-                break;
-            case DOWN:
-                shotDeltaY = shotBaseSpeed;
-                break;
-            case LEFT:
-                shotDeltaX = -shotBaseSpeed;
-                break;
-            case RIGHT:
-                shotDeltaX = shotBaseSpeed;
-                break;
-        }
-        return new Shot(x_pos, y_pos, this.bulletDamage, shotDeltaX, shotDeltaY); // 캐릭터별 데미지, x/y 이동량 전달
+    	SoundPlayer.playSound("sounds/gunshot.wav");
+        return new Shot(x_pos, y_pos, this.bulletDamage); // 캐릭터별 데미지 사용
     }
 
     public void drawPlayer(Graphics g) {
         g.setColor(Color.blue);
-        int[] x_poly;
-        int[] y_poly;
-
-        // 현재 방향에 따라 플레이어 모양 변경
-        switch (currentDirection) {
-            case UP:
-                x_poly = new int[]{x_pos, x_pos - 10, x_pos, x_pos + 10};
-                y_poly = new int[]{y_pos - 15, y_pos + 5, y_pos, y_pos + 5}; // 위쪽을 향하도록 조정
-                break;
-            case DOWN:
-                x_poly = new int[]{x_pos, x_pos - 10, x_pos, x_pos + 10};
-                y_poly = new int[]{y_pos + 15, y_pos - 5, y_pos, y_pos - 5}; // 아래쪽을 향하도록 조정
-                break;
-            case LEFT:
-                x_poly = new int[]{x_pos - 15, x_pos + 5, x_pos, x_pos + 5};
-                y_poly = new int[]{y_pos, y_pos - 10, y_pos, y_pos + 10}; // 왼쪽을 향하도록 조정
-                break;
-            case RIGHT:
-                x_poly = new int[]{x_pos + 15, x_pos - 5, x_pos, x_pos - 5};
-                y_poly = new int[]{y_pos, y_pos - 10, y_pos, y_pos + 10}; // 오른쪽을 향하도록 조정
-                break;
-            default: // 기본값 (위)
-                x_poly = new int[]{x_pos, x_pos - 10, x_pos, x_pos + 10};
-                y_poly = new int[]{y_pos, y_pos + 15, y_pos + 10, y_pos + 15};
-                break;
-        }
+        int[] x_poly = {x_pos, x_pos - 10, x_pos, x_pos + 10};
+        int[] y_poly = {y_pos, y_pos + 15, y_pos + 10, y_pos + 15};
         g.fillPolygon(x_poly, y_poly, 4);
         drawHealthBar(g);
     }
@@ -229,13 +168,5 @@ public class Player {
             g.fillRect(x_pos - 25 + i * (barWidth + spacing), y_pos + 50, barWidth, barHeight);
         }
     
-    }
-    // 새로운 메소드들 추가
-    public boolean hasDirectionChangedSinceLastShot() {
-        return this.directionChangedSinceLastShot;
-    }
-
-    public void consumeShotEvent() {
-        this.directionChangedSinceLastShot = false;
     }
 }

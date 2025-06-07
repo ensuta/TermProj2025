@@ -1,4 +1,4 @@
-package shootingspaceship.entites;
+package shootingspaceship;
 
 import java.awt.Graphics;
 import java.awt.Image;
@@ -12,7 +12,7 @@ public class ClearBomb {
     private final int DURATION = 1000; // 이펙트 지속 시간 (ms)
 
     public ClearBomb() {
-        effectImage = new ImageIcon("/shootingspaceship/resources/image/screen_bomb_effect.png").getImage();
+        effectImage = new ImageIcon("image/screen_bomb_effect.png").getImage();
     }
 
     public void activate(List<Enemy> enemies, List<Bomb> clearbombs) {
