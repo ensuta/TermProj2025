@@ -1,10 +1,10 @@
-package shootingspaceship;
+package shootingspaceship.entites;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class Boss extends Enemy {
     private int health;
@@ -15,7 +15,11 @@ public class Boss extends Enemy {
     public Boss(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc, String imagePath, int i){
         super(x, y, delta_x, delta_y, max_x, max_y, delta_y_inc);
         try {
-            bossImage = ImageIO.read(new File("src\\shootingspaceship\\image\\"+imagePath));
+            InputStream imgStream = Boss.class.getResourceAsStream("/shootingspaceship/resources/image/" + imagePath);
+            if (imgStream == null) {
+                throw new IOException("Resource not found: /shootingspaceship/resources/image/" + imagePath);
+            }
+            bossImage = ImageIO.read(imgStream);
         } catch(IOException e) {
             e.printStackTrace();
         }

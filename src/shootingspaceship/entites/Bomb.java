@@ -1,4 +1,4 @@
-package shootingspaceship;
+package shootingspaceship.entites;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -41,7 +41,7 @@ public class Bomb extends Enemy{
 
         // 이미지 로딩 시도 (File 경로)
         try {
-            bombImage = ImageIO.read(new File("src/shootingspaceship/image/firstBomb.png"));
+            bombImage = ImageIO.read(new File("/shootingspaceship/resources/image/firstBomb.png"));
         } catch (IOException e) {
             System.out.println("Bomb 이미지 로드 실패");
             e.printStackTrace();
@@ -50,7 +50,7 @@ public class Bomb extends Enemy{
     // 이미지 로딩 시도 (클래스패스 경로)
         if (bombImage == null) {
             try {
-                bombImage = ImageIO.read(getClass().getResource("/shootingspaceship/Image/firstBomb.png"));
+                bombImage = ImageIO.read(getClass().getResource("/shootingspaceship/resources/image//firstBomb.png"));
                 if (bombImage == null) {
                     System.err.println("Bomb 이미지 경로 잘못됨: 파일이 존재하지 않음");
                 }
