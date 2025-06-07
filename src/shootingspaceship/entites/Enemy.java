@@ -5,7 +5,6 @@ import java.awt.Color;
 import javax.imageio.ImageIO; 
 import java.awt.image.BufferedImage; 
 import java.io.IOException; 
-import java.io.File; 
 import java.net.URL;
 import java.util.*;
 
@@ -24,8 +23,6 @@ public class Enemy {
     int currentFrame = 0; // 현재 보여줄 프레임 인덱스(0번 프레임)
     long lastFrameTime = 0; // 마지막으로프레임이 전환된 시간 -> System.currentTImeMillis() 기준 시간 저장
     int frameDelay = 300; // 프레임 전환 간의 지연 시간 0.3초마다 다음 프레임으로 애니메이션 전환 
-    
-    private Random random = new Random(); // 랜덤 객체 추가
 
     private long lastShotTime = 0; // 마지막으로 총을 쏜 시점 기록
     private long shotInterval = 1000; // 적이 1초마다 총알 발사

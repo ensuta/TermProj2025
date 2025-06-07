@@ -65,12 +65,12 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
 
     // 폭탄 관련 변수
+    private boolean useBombTriggered = false; // 폭탄 사용 트리거 플래그
     protected CopyOnWriteArrayList<Bomb> bombs = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<Bomb> activeBombs = new CopyOnWriteArrayList<>();
     long lastBombTime = 0;
     long bombInterval = 1500;
     long currentTime = System.currentTimeMillis();
-    private boolean useBombTriggered = false; // 폭탄 사용 트리거 플래그
     // 2페이지 바람 방해 패턴 변수
     private boolean showWindEffect = false;
     private long windEffectEndTime = 0;
@@ -171,10 +171,30 @@ public class Shootingspaceship extends JPanel implements Runnable {
                 case KeyEvent.VK_S: playerMoveDown = false; break;
                 case KeyEvent.VK_A: playerMoveLeft = false; break;
                 case KeyEvent.VK_D: playerMoveRight = false; break;
-                case KeyEvent.VK_UP: upArrowPressed = false; break;
-                case KeyEvent.VK_DOWN: downArrowPressed = false; break;
-                case KeyEvent.VK_LEFT: leftArrowPressed = false; break;
-                case KeyEvent.VK_RIGHT: rightArrowPressed = false; break;
+                case KeyEvent.VK_UP: 
+                    upArrowPressed = false; 
+                    if (!downArrowPressed && !leftArrowPressed && !rightArrowPressed) {
+                        shooting = false;
+                    }
+                    break;
+                case KeyEvent.VK_DOWN: 
+                    downArrowPressed = false; 
+                    if (!upArrowPressed && !leftArrowPressed && !rightArrowPressed) {
+                        shooting = false;
+                    }
+                    break;
+                case KeyEvent.VK_LEFT: 
+                    leftArrowPressed = false; 
+                    if (!upArrowPressed && !downArrowPressed && !rightArrowPressed) {
+                        shooting = false;
+                    }
+                    break;
+                case KeyEvent.VK_RIGHT: 
+                    rightArrowPressed = false; 
+                    if (!upArrowPressed && !downArrowPressed && !leftArrowPressed) {
+                        shooting = false;
+                    }
+                    break;
             }
         }
 
@@ -318,8 +338,6 @@ public class Shootingspaceship extends JPanel implements Runnable {
             if (playerMoveLeft && !playerMoveRight) { player.moveX(-currentPlayerMoveSpeed); }
             else if (playerMoveRight && !playerMoveLeft) { player.moveX(currentPlayerMoveSpeed); }
 
-            boolean needClearEnemies = false;
-
             // 적 처리 (이동, 총알 발사, 충돌 검사)
             Iterator<Enemy> enemyList = enemies.iterator();
             while (enemyList.hasNext()) {
@@ -335,10 +353,11 @@ public class Shootingspaceship extends JPanel implements Runnable {
                         --enemySize;
                         System.out.println("남은 보스 등장 처치 조건: " + bossThreshold);
                         if (bossThreshold <= 0 && !bossAppear) { // 보스 등장 조건 충족
-                            needClearEnemies = true;
+                            enemies.clear(); // 수정: 즉시 모든 적 제거
+                            enemySize = 0;   // 수정: 적 카운트도 0으로 초기화
                             spawnBoss();
                             timer.stop(); // 적 생성 타이머 중지
-                            break;
+                            break; // 적 처리 루프 종료
                         }
                     }
                 }
@@ -347,11 +366,6 @@ public class Shootingspaceship extends JPanel implements Runnable {
                     JOptionPane.showMessageDialog(this, "게임오버: 플레이어와 충돌");
                     System.exit(0);
                 }
-            }
-
-            if (needClearEnemies) { 
-                enemies.clear();
-                enemySize = 0;
             }
 
             if (boss != null) { // 보스 처리 (이동, 총알 충돌, 게임 종료)
@@ -466,7 +480,6 @@ public class Shootingspaceship extends JPanel implements Runnable {
         // 스테이지 정보 표시
         dbg.setColor(Color.WHITE);
         dbg.drawString("Stage: " + stageManager.getCurrentStage(), 10, 20);
-
         g.drawImage(dbImage, 0, 0, this); // 최종 이미지 화면에 그리기
     }
 
