@@ -4,6 +4,12 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.List;
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.geom.Path2D;
+
+
 
 public class Player {
     private int bulletDamage;
@@ -13,6 +19,7 @@ public class Player {
     private int max_x;
     protected int min_y;	//최소 y 값
     protected int max_y;	//최대 y 값
+
     //추가기능
     private static final int WIDTH = 32;
     private static final int HEIGHT = 32;
@@ -27,7 +34,6 @@ public class Player {
     //플레이어 피통 추가
     private int health;
     private final int PlayerHealth = 5;
-    
     protected boolean isHit = false;
     protected long hitTime = 0;
     public Player(int x, int y, int min_x, int max_x, int min_y, int max_y, int bulletDamage) {
@@ -137,6 +143,7 @@ public class Player {
     }
 
     public Shot generateShot() {
+    	SoundPlayer.playSound("sounds/gunshot.wav");
         return new Shot(x_pos, y_pos, this.bulletDamage); // 캐릭터별 데미지 사용
     }
 

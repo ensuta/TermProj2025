@@ -81,6 +81,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         currentShotInterval = this.selectedCharacter.shotInterval; 
         stageManager = new StageManager();
         shots = new Shot[maxShotNum];
+        MusicPlayer.playBackgroundMusic("sounds/backgroundmusic.wav"); // 배경음악 재생
         enemies = new ArrayList<Enemy>(); 
         enemySize = 0; 
         rand = new Random(1); 
