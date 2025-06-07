@@ -158,6 +158,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
                 float horspeed = rand.nextFloat() * 2 * enemyMaxHorizonSpeed - enemyMaxHorizonSpeed;
 
                 Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
+                newEnemy.setEnemyImage(stageManager.getEnemyImagePathForStage());
                 enemies.add(newEnemy); // CopyOnWriteArrayList는 스레드 안전
                 ++enemySize;
             }
@@ -320,7 +321,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         // 적 그리기 및 이미지 설정
         for (Enemy enemy : enemies) {
             enemy.draw(dbg);
-            enemy.setEnemyImage(stageManager.getEnemyImagePathForStage());
+            // enemy.setEnemyImage(stageManager.getEnemyImagePathForStage()); // 이 줄 삭제!
         }
 
         // 플레이어 총알 그리기
