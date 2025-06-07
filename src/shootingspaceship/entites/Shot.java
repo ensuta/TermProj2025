@@ -1,4 +1,4 @@
-package shootingspaceship;
+package shootingspaceship.entites;
 import java.awt.Graphics;
 import java.awt.Color;
 

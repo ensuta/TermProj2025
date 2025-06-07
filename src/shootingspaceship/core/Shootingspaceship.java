@@ -1,9 +1,17 @@
-package shootingspaceship;
+package shootingspaceship.core;
 
 import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.awt.*;
 import javax.swing.*;
+
+import shootingspaceship.audio.MusicPlayer;
+import shootingspaceship.entites.Bomb;
+import shootingspaceship.entites.Boss;
+import shootingspaceship.entites.Enemy;
+import shootingspaceship.entites.Player;
+import shootingspaceship.entites.Shot;
+
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
@@ -77,7 +85,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         currentShotInterval = this.selectedCharacter.shotInterval;
         stageManager = new StageManager();
         shots = new Shot[maxShotNum];
-        MusicPlayer.playBackgroundMusic("sounds/backgroundmusic.wav");
+        MusicPlayer.playBackgroundMusic("/shootingspaceship/resources//sounds/backgroundmusic.wav");
         enemies = new CopyOnWriteArrayList<>();
         enemySize = 0;
         timer = new javax.swing.Timer(enemyTimeGap, new addANewEnemy()); // 적 생성 타이머 설정
@@ -101,7 +109,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
         player = new Player(width / 2, (int) (height * 0.9), playerMargin, width - playerMargin, 0, height - playerMargin, this.selectedCharacter.bulletDamage);
 
         try {
-            backgroundImg = ImageIO.read(getClass().getResource("/shootingspaceship/Image/gamesky.jpg"));
+            backgroundImg = ImageIO.read(getClass().getResource("/shootingspaceship/resources/image/gamesky.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }

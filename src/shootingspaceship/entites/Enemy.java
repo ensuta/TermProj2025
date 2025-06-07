@@ -1,4 +1,4 @@
-package shootingspaceship; 
+package shootingspaceship.entites; 
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Color; 
@@ -46,10 +46,10 @@ public class Enemy {
     	try {
     		enemyImage = new BufferedImage[imagePath.length]; // 외부에서 전달받은 이미지 경로 개수만큼 bufferedImage 배열 생성
     		for(int i=0;i<imagePath.length;++i) { //각 이미지 돌면서 파일 로드
-    			String fullPath = "/shootingspaceship/image/" + imagePath[i]; 
+    			String fullPath = "/shootingspaceship/resources/image/" + imagePath[i];
     			URL imageURL = getClass().getResource(fullPath);
-    			if(imageURL == null) { // 이미지 파일 존재하지 않는 경우
-    				System.err.println("이미지 파일을 찾을 수 없습니다.");
+    			if(imageURL == null) { 
+    				System.err.println("이미지 파일을 찾을 수 없습니다: " + fullPath); // 전체 경로 출력
     				continue;
     			}
     			enemyImage[i] = ImageIO.read(imageURL);// 이미지 파일읽어서 BufferedImage 객체로 저장

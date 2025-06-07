@@ -1,8 +1,9 @@
-package shootingspaceship;
+package shootingspaceship.audio;
 
 import javax.sound.sampled.*;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.BufferedInputStream;
 
 public class MusicPlayer {
     private static Clip bgClip;       // 배경음악용 클립
@@ -12,8 +13,11 @@ public class MusicPlayer {
     public static void playBackgroundMusic(String filepath) {
         stopBackgroundMusic(); // 중복 방지
         try {
-            File soundFile = new File(filepath);
-            AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
+            InputStream audioSrc = MusicPlayer.class.getResourceAsStream(filepath);
+            if (audioSrc == null) {
+                throw new IOException("Resource not found: " + filepath);
+            }
+            AudioInputStream audioIn = AudioSystem.getAudioInputStream(new BufferedInputStream(audioSrc));
             bgClip = AudioSystem.getClip();
             bgClip.open(audioIn);
             bgClip.loop(Clip.LOOP_CONTINUOUSLY);
@@ -36,17 +40,20 @@ public class MusicPlayer {
         stopEffectClip(); // 이전 효과음 멈추기
 
         String filename = switch (stage) {
-            case 1 -> "sounds/트랄라레오트랄랄라.wav";
-            case 2 -> "sounds/봄바르딜로 크로코딜로.wav";
-            case 3 -> "sounds/퉁사후르.wav";
-            case 4 -> "sounds/니릴리라릴라.wav";
+            case 1 -> "/shootingspaceship/resources/sounds/트랄라레오트랄랄라.wav";
+            case 2 -> "/shootingspaceship/resources/sounds/봄바르딜로 크로코딜로.wav";
+            case 3 -> "/shootingspaceship/resources/sounds/퉁사후르.wav";
+            case 4 -> "/shootingspaceship/resources/sounds/니릴리라릴라.wav";
             default -> null;
         };
 
         if (filename != null) {
             try {
-                File soundFile = new File(filename);
-                AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
+                InputStream audioSrc = MusicPlayer.class.getResourceAsStream(filename);
+                if (audioSrc == null) {
+                    throw new IOException("Resource not found: " + filename);
+                }
+                AudioInputStream audioIn = AudioSystem.getAudioInputStream(new BufferedInputStream(audioSrc));
                 effectClip = AudioSystem.getClip();
                 effectClip.open(audioIn);
                 effectClip.start(); // ❗한 번만 재생

@@ -1,8 +1,11 @@
-package shootingspaceship;
+package shootingspaceship.entites;
 
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.List;
+
+import shootingspaceship.audio.SoundPlayer; // 변경된 import 경로
+
 import java.awt.Color;
 
 public class Player {
@@ -158,7 +161,7 @@ public class Player {
     }
 
     public Shot generateShot() {
-    	SoundPlayer.playSound("sounds/gunshot.wav");
+    	SoundPlayer.playSound("/shootingspaceship/resources/sounds/gunshot.wav");
         // 현재 방향에 따라 총알의 deltaX, deltaY 설정
         int shotDeltaX = 0;
         int shotDeltaY = 0;
