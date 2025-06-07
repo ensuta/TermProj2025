@@ -6,54 +6,49 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 
 public class Bomb extends Enemy{
-	private List<Bomb> activeBombs = new ArrayList<>();
-	private long lastBombTime = 0;
-	private long bombInterval = 1000; // 1초에 한 번
 
-	private boolean Parry;
-	private Color color= Color.RED;
-    private boolean active;
+    private boolean Parry;
+    private Color color= Color.RED;
+    private boolean active; // 폭탄 활성화 여부
     private int speed;
-    private boolean isParryable = false;
-    private static BufferedImage bombImage;
+    private static BufferedImage bombImage; // 폭탄 이미지
     private int speedY;
-	private int x;
-	private int y;
-	
-	int scaledBWidth = 1;  //폭탄 원하는 너비
-	int scaledBHeight = 150; //폭탄 원하는 높이
-	
+    private int x;
+    private int y;
+    
+    int scaledBWidth = 1;  // 폭탄 이미지 너비
+    int scaledBHeight = 150; // 폭탄 이미지 높이
+    
     public static final int WIDTH = 32;
     public static final int HEIGHT = 32;
-    private static final int SCREEN_HEIGHT = 800;
+    private static final int SCREEN_HEIGHT = 800; // 화면 높이
     
     public Bomb(float x, float y, int speedY) {
-    	super((int) x, (int) y, y, y, speedY, speedY, y);
-    	this.x = (int)x;
-    	this.y = (int)y;
-    	this.speed = speed;
-    	this.speedY = speedY;
-    	this.Parry = false;
-    	this.Parry = false; //기본 상태
-    	this.color = Color.RED;
-    	this.active = true;
-    	this.speedY = speedY;
-    	
-    	try {
+        super((int) x, (int) y, y, y, speedY, speedY, y);
+        this.x = (int)x;
+        this.y = (int)y;
+        this.speed = speed;
+        this.speedY = speedY;
+        this.Parry = false;
+        this.Parry = false;
+        this.color = Color.RED;
+        this.active = true;
+        this.speedY = speedY;
+
+        // 이미지 로딩 시도 (File 경로)
+        try {
             bombImage = ImageIO.read(new File("src/shootingspaceship/image/firstBomb.png"));
         } catch (IOException e) {
             System.out.println("Bomb 이미지 로드 실패");
             e.printStackTrace();
         }
     
-    //이미지 로딩 (한 번만)
-    	if (bombImage == null) {
+    // 이미지 로딩 시도 (클래스패스 경로)
+        if (bombImage == null) {
             try {
                 bombImage = ImageIO.read(getClass().getResource("/shootingspaceship/Image/firstBomb.png"));
                 if (bombImage == null) {
@@ -65,62 +60,53 @@ public class Bomb extends Enemy{
             }
         }
     }
-    public void update() {
-    	y += speedY;
-    	if (y > SCREEN_HEIGHT) {
-    		active = false;
-    	}
+    public void update() { // 폭탄 상태 업데이트 (이동 및 화면 이탈 처리)
+        y += speedY;
+        if (y > SCREEN_HEIGHT) {
+            active = false;
+        }
     }
     
-//    @Override
-//    public Rectangle getBounds() {
-//    	int width = (bombImage != null) ? bombImage.getWidth() : 32;   // 기본값 32
-//        int height = (bombImage != null) ? bombImage.getHeight() : 32;
-//        return new Rectangle(x, y, width, height);
-//    }
-    
     @Override
-    public boolean isCollidedWithPlayer(Player player) {
+    public boolean isCollidedWithPlayer(Player player) { // 플레이어와의 충돌 여부 확인
         if (bombImage == null) {
-        	return false;
+            return false;
         }
 
         Rectangle bombBounds = new Rectangle((int)x, (int)y, bombImage.getWidth(), bombImage.getHeight());
         Rectangle playerBounds = player.getBounds();
 
-        
+        // 실제 충돌 검사 로직이 누락되어 있음 (항상 false 반환)
         return false;
     }
     
-    public void move() {
+    public void move() { // 폭탄 이동
         y += speed;
     }
     
-    public void moveBomb(int delta) {
+    public void moveBomb(int delta) { // 특정 값만큼 폭탄 이동
         this.y += delta;
     }
     
-    public void drawBomb(Graphics g) {
-    	if (!active) return;
-    	
-    	if(bombImage != null) {
-    		g.drawImage(bombImage, (int)x, (int)y, scaledBWidth, scaledBHeight, null);
-    	} else {
-    		g.setColor(Color.YELLOW);
+    public void drawBomb(Graphics g) { // 폭탄 그리기
+        if (!active) return;
+        
+        if(bombImage != null) {
+            g.drawImage(bombImage, (int)x, (int)y, scaledBWidth, scaledBHeight, null);
+        } else { // 이미지가 없으면 기본 원형으로 그림
+            g.setColor(Color.YELLOW);
             g.fillOval((int)x, (int)y, WIDTH, HEIGHT);
-    	}
+        }
     }
     
-    public void setColor(Color color) {
-    	this.color = color;
+    public void setColor(Color color) { // 폭탄 색상 설정
+        this.color = color;
     }
     
-    //비활성
-    public void deactivate() {
-    	this.active = false;
+    public void deactivate() { // 폭탄 비활성화
+        this.active = false;
     }
-    //활성화
-    public boolean isActive() {
-    	return active;
-    }   
+    public boolean isActive() { // 폭탄 활성화 상태 반환
+        return active;
+    }    
 }

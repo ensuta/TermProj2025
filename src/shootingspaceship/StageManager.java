@@ -1,9 +1,6 @@
 package shootingspaceship;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-
-import java.io.*;
 import java.awt.Graphics;
 import java.awt.Image;
 
