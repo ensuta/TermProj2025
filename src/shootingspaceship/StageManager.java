@@ -1,9 +1,6 @@
-package shootingspaceship.core;
+package shootingspaceship;
 
 import javax.swing.ImageIcon;
-
-import shootingspaceship.audio.MusicPlayer;
-
 import java.awt.Graphics;
 import java.awt.Image;
 
@@ -14,9 +11,9 @@ public class StageManager {
     private int lastMusicStage = -1; // 마지막 재생된 스테이지 음악
 
     // 각 스테이지별 설정값
-    private final int[] enemiesPerStage = {5, 10, 15, 20, 100}; 
-    private final int[] bossHealthPerStage = {20, 30, 40, 50, 100}; //스테이지 별 보스 피 
-    private final float[] bossSpeedPerStage = {5, 6, 7, 7, 100}; //스테이지 별 보스 속도
+    private final int[] enemiesPerStage = {5, 10, 15, 20}; 
+    private final int[] bossHealthPerStage = {20, 30, 40, 50}; //스테이지 별 보스 피 
+    private final float[] bossSpeedPerStage = {0.2f, 0.4f, 0.6f, 0.8f}; //스테이지 별 보스 속도
     
     //배경 이미지
     private Image backgroundImage;
@@ -47,7 +44,7 @@ public class StageManager {
     
     public Image loadBackgroundImage() {
         String path = getBackgroundImagePathForStage();
-        java.net.URL imgURL = getClass().getResource("/shootingspaceship/resources/image/"+path);
+        java.net.URL imgURL = getClass().getResource("/shootingspaceship/image/"+path);
         if (imgURL == null) {
             System.err.println("이미지 경로를 찾을 수 없습니다: " + path);
             return null;

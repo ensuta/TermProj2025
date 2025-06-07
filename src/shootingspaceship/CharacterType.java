@@ -1,4 +1,4 @@
-package shootingspaceship.core;
+package shootingspaceship;
 
 public enum CharacterType {
     // 캐릭터 이름(이동속도, 총알발사간격(ms, 낮을수록 빠름), 총알데미지)
