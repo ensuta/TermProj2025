@@ -11,6 +11,7 @@ public class StageManager {
     //스테이지 설정
     private int currentStage = 1; 
     private int maxStage = 4;
+    private int lastMusicStage = -1; // 마지막 재생된 스테이지 음악
 
     // 각 스테이지별 설정값
     private final int[] enemiesPerStage = {5, 10, 15, 20}; 
