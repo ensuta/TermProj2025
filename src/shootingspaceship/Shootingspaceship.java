@@ -17,52 +17,55 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private Thread th; // 게임 루프 스레드
     private int enemySize; // 현재 화면에 있는 적의 수
     private javax.swing.Timer timer; // 적 생성 타이머
-    private boolean playerMoveLeft;
-    private boolean playerMoveRight;
+
+    protected boolean playerMoveLeft;
+    protected boolean playerMoveRight;
     protected boolean playerMoveUp;
     protected boolean playerMoveDown;
+
+    private boolean upArrowPressed = false;
+    private boolean downArrowPressed = false;
+    private boolean leftArrowPressed = false;
+    private boolean rightArrowPressed = false;
+
     private Image dbImage; // 더블 버퍼링용 백버퍼 이미지
     private Graphics dbg; // 백버퍼 이미지에 그릴 Graphics 객체
-    private Random rand;
     private StageManager stageManager;
     private CharacterType selectedCharacter;
 
     // 각종 파라미터
     private final int width = 1280;
     private final int height = 720;
-    private final int shotSpeed = -5;
     private int maxShotNum = 10000;
     private final int playerMargin = 10;
     private int currentPlayerMoveSpeed;
     private int currentShotInterval;
 
     // 적 관련 파라미터
+    private final float[] enemySpeedPerStage = {1.0f, 1.5f, 2.0f, 2.5f, 3.0f};
     private final int enemyMaxDownSpeed = 1;
     private final int enemyMaxHorizonSpeed = 2;
-    private final float enemyDownSpeedInc = 0.5f;
     private final int enemyTimeGap = 500;
-    private final int maxEnemySize = 20;
+    private final int maxEnemySize = 10;
     private boolean bossAppear = false;
-    private int bossThreshold; // 보스 등장을 위한 적 처치 카운트
-
+    private int bossThreshold; 
     private boolean shooting = false;
     private long lastShotTime = 0;
-
     private Image backgroundImg;
+    List<Shot> bossShots = new CopyOnWriteArrayList<>();
 
+
+
+    // 폭탄 관련 변수
     protected CopyOnWriteArrayList<Bomb> bombs = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<Bomb> activeBombs = new CopyOnWriteArrayList<>();
     long lastBombTime = 0;
     long bombInterval = 1500;
     long currentTime = System.currentTimeMillis();
     private boolean useBombTriggered = false; // 폭탄 사용 트리거 플래그
-    List<Shot> bossShots = new CopyOnWriteArrayList<>();
-
     // 2페이지 바람 방해 패턴 변수
     private boolean showWindEffect = false;
     private long windEffectEndTime = 0;
-
-    private final float[] enemySpeedPerStage = {1.0f, 1.5f, 2.0f, 2.5f, 3.0f};
 
     public float getEnemySpeedForStage() {
         return enemySpeedPerStage[stageManager.getCurrentStage() - 1];
@@ -77,7 +80,6 @@ public class Shootingspaceship extends JPanel implements Runnable {
         MusicPlayer.playBackgroundMusic("sounds/backgroundmusic.wav");
         enemies = new CopyOnWriteArrayList<>();
         enemySize = 0;
-        rand = new Random(1);
         timer = new javax.swing.Timer(enemyTimeGap, new addANewEnemy()); // 적 생성 타이머 설정
         timer.start();
         addKeyListener(new ShipControl());
@@ -114,12 +116,32 @@ public class Shootingspaceship extends JPanel implements Runnable {
     private class ShipControl implements KeyListener {
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
-                case KeyEvent.VK_LEFT: playerMoveLeft = true; break;
-                case KeyEvent.VK_RIGHT: playerMoveRight = true; break;
-                case KeyEvent.VK_UP: playerMoveUp = true; break;
-                case KeyEvent.VK_DOWN: playerMoveDown = true; break;
-                case KeyEvent.VK_Z: shooting = true; break;
-                case KeyEvent.VK_B:
+                // 방향키로 플레이어 이동 및 총알 발사
+                case KeyEvent.VK_W: playerMoveUp = true; break;
+                case KeyEvent.VK_S: playerMoveDown = true; break;
+                case KeyEvent.VK_A: playerMoveLeft = true; break;
+                case KeyEvent.VK_D: playerMoveRight = true; break;
+                case KeyEvent.VK_UP: 
+                    upArrowPressed = true;
+                    player.setDirection(Player.Direction.UP);
+                    shooting = true; 
+                    break;
+                case KeyEvent.VK_DOWN: 
+                    downArrowPressed = true;
+                    player.setDirection(Player.Direction.DOWN);
+                    shooting = true; 
+                    break;
+                case KeyEvent.VK_LEFT: 
+                    leftArrowPressed = true;
+                    player.setDirection(Player.Direction.LEFT);
+                    shooting = true; 
+                    break;
+                case KeyEvent.VK_RIGHT: 
+                    rightArrowPressed = true;
+                    player.setDirection(Player.Direction.RIGHT);
+                    shooting = true; 
+                    break;
+                case KeyEvent.VK_SPACE:
                     useBombTriggered = true;
                     // 폭탄 로직을 새 스레드에서 처리하여 논블로킹 실행
                     new Thread(() -> {
@@ -137,11 +159,14 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
         public void keyReleased(KeyEvent e) {
             switch (e.getKeyCode()) {
-                case KeyEvent.VK_LEFT: playerMoveLeft = false; break;
-                case KeyEvent.VK_RIGHT: playerMoveRight = false; break;
-                case KeyEvent.VK_UP: playerMoveUp = false; break;
-                case KeyEvent.VK_DOWN: playerMoveDown = false; break;
-                case KeyEvent.VK_Z: shooting = false; break;
+                case KeyEvent.VK_W: playerMoveUp = false; break;
+                case KeyEvent.VK_S: playerMoveDown = false; break;
+                case KeyEvent.VK_A: playerMoveLeft = false; break;
+                case KeyEvent.VK_D: playerMoveRight = false; break;
+                case KeyEvent.VK_UP: upArrowPressed = false; break;
+                case KeyEvent.VK_DOWN: downArrowPressed = false; break;
+                case KeyEvent.VK_LEFT: leftArrowPressed = false; break;
+                case KeyEvent.VK_RIGHT: rightArrowPressed = false; break;
             }
         }
 
@@ -151,21 +176,55 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
     private class addANewEnemy implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            // 보스 미등장 & 최대 적 수 미달 시 새 적 생성
             if (!bossAppear && enemySize < maxEnemySize) {
-                float downspeed;
-                do { downspeed = rand.nextFloat() * enemyMaxDownSpeed; } while (downspeed == 0);
-                float horspeed = rand.nextFloat() * 2 * enemyMaxHorizonSpeed - enemyMaxHorizonSpeed;
+                Random rand = new Random();
+                int side = rand.nextInt(4); // 0: top, 1: bottom, 2: left, 3: right
+                float startX = 0, startY = 0;
+                float speedX = 0, speedY = 0;
 
-                Enemy newEnemy = new Enemy((int) (rand.nextFloat() * width), 0, horspeed, downspeed, width, height, enemyDownSpeedInc);
+                do {
+                    speedX = rand.nextFloat() * 2 * enemyMaxHorizonSpeed - enemyMaxHorizonSpeed;
+                } while (speedX == 0);
+                do {
+                    speedY = rand.nextFloat() * enemyMaxDownSpeed;
+                    if (rand.nextBoolean()) { 
+                        speedY = -speedY;
+                    }
+                } while (speedY == 0);
+
+
+                switch (side) {
+                    case 0: // Top
+                        startX = rand.nextFloat() * width;
+                        startY = 0;
+                        if (speedY < 0) speedY = -speedY; // 아래로 향하도록 보정
+                        break;
+                    case 1: // Bottom
+                        startX = rand.nextFloat() * width;
+                        startY = height;
+                        if (speedY > 0) speedY = -speedY; // 위로 향하도록 보정
+                        break;
+                    case 2: // Left
+                        startX = 0;
+                        startY = rand.nextFloat() * height;
+                        if (speedX < 0) speedX = -speedX; // 오른쪽으로 향하도록 보정
+                        break;
+                    case 3: // Right
+                        startX = width;
+                        startY = rand.nextFloat() * height;
+                        if (speedX > 0) speedX = -speedX; // 왼쪽으로 향하도록 보정
+                        break;
+                }
+
+                Enemy newEnemy = new Enemy((int)startX, (int)startY, speedX, speedY, width, height, 0); // delta_y_inc는 0으로 설정
                 newEnemy.setEnemyImage(stageManager.getEnemyImagePathForStage());
-                enemies.add(newEnemy); // CopyOnWriteArrayList는 스레드 안전
+                enemies.add(newEnemy); 
                 ++enemySize;
             }
         }
     }
 
-    private void spawnBoss() { // 스테이지에 맞는 보스 생성
+    private void spawnBoss() {
         int stage = stageManager.getCurrentStage();
         String bossImagePath = "missing.png";
         switch (stage) {
@@ -175,17 +234,55 @@ public class Shootingspaceship extends JPanel implements Runnable {
             case 4: bossImagePath = "lirili_larila.png"; break;
             default: bossImagePath = "missing.png"; break;
         }
-        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath, stage);
+
+        Random rand = new Random();
+        int side = rand.nextInt(4); 
+        float startX = 0, startY = 0;
+        float speedX = 0, speedY = 0;
+        float currentBossSpeed = stageManager.getBossSpeedForStage();
+
+        switch (side) {
+            case 0: 
+                startX = rand.nextFloat() * width; 
+                startY = 0;                     
+                speedY = currentBossSpeed;       
+                speedX = (rand.nextFloat() - 0.5f) * currentBossSpeed; 
+                break;
+            case 1: 
+                startX = rand.nextFloat() * width; 
+                startY = height;                
+                speedY = -currentBossSpeed;     
+                speedX = (rand.nextFloat() - 0.5f) * currentBossSpeed;
+                break;
+            case 2:
+                startX = 0;     
+                startY = rand.nextFloat() * height; 
+                speedX = currentBossSpeed;     
+                speedY = (rand.nextFloat() - 0.5f) * currentBossSpeed;
+                break;
+            case 3: 
+                startX = width;               
+                startY = rand.nextFloat() * height; 
+                speedX = -currentBossSpeed;     
+                speedY = (rand.nextFloat() - 0.5f) * currentBossSpeed;
+                break;
+        }
+        
+        boss = new Boss((int)startX, (int)startY, speedX, speedY, width, height, 0.05f, bossImagePath, stage);
         boss.setHealth(stageManager.getBossHealthForStage());
         bossAppear = true;
     }
 
 
-    public void run() { // 게임 루프
+    public void run() { 
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
         while (true) {
-            if (shooting) { // 플레이어 총알 발사 처리
+            if (!upArrowPressed && !downArrowPressed && !leftArrowPressed && !rightArrowPressed) {
+                shooting = false;
+            }
+
+            if (shooting) {
                 long now = System.currentTimeMillis();
                 if (now - lastShotTime > currentShotInterval) {
                     for (int i = 0; i < shots.length; i++) {
@@ -197,21 +294,21 @@ public class Shootingspaceship extends JPanel implements Runnable {
                     }
                 }
             }
-            // 플레이어 총알 이동 및 화면 밖 제거
+
             for (int i = 0; i < shots.length; i++) {
                 if (shots[i] != null) {
-                    shots[i].moveShot(shotSpeed);
-                    if (shots[i].getY() < 0) {
+                    shots[i].moveShot(); 
+                    if (shots[i].getY() < 0 || shots[i].getY() > height || shots[i].getX() < 0 || shots[i].getX() > width) {
                         shots[i] = null;
                     }
                 }
             }
 
             // 플레이어 이동 처리
-            if (playerMoveLeft && !playerMoveRight) { player.moveX(-currentPlayerMoveSpeed); }
-            else if (playerMoveRight && !playerMoveLeft) { player.moveX(currentPlayerMoveSpeed); }
             if (playerMoveUp && !playerMoveDown) { player.moveY(-currentPlayerMoveSpeed); }
             else if (playerMoveDown && !playerMoveUp) { player.moveY(currentPlayerMoveSpeed); }
+            if (playerMoveLeft && !playerMoveRight) { player.moveX(-currentPlayerMoveSpeed); }
+            else if (playerMoveRight && !playerMoveLeft) { player.moveX(currentPlayerMoveSpeed); }
 
             boolean needClearEnemies = false;
 
@@ -237,18 +334,14 @@ public class Shootingspaceship extends JPanel implements Runnable {
                         }
                     }
                 }
-                // 게임 종료 조건: 적이 플레이어와 충돌 또는 화면 아래 도달
+                // 게임 종료 조건: 적이 플레이어와 충돌
                 if (enemy.isCollidedWithPlayer(player)) {
                     JOptionPane.showMessageDialog(this, "게임오버: 플레이어와 충돌");
                     System.exit(0);
                 }
-                if (enemy.getY() >= height) {
-                    JOptionPane.showMessageDialog(this, "게임오버: 적이 화면 아래에 도달");
-                    System.exit(0);
-                }
             }
 
-            if (needClearEnemies) { // 적 제거 플래그가 설정되면
+            if (needClearEnemies) { 
                 enemies.clear();
                 enemySize = 0;
             }
@@ -277,10 +370,6 @@ public class Shootingspaceship extends JPanel implements Runnable {
                 // 게임 종료 조건: 보스가 플레이어와 충돌 또는 화면 아래 도달
                 if (boss.isCollidedWithPlayer(player)) {
                     JOptionPane.showMessageDialog(this, "게임오버: 보스가 플레이어와 충돌");
-                    System.exit(0);
-                }
-                if (boss.getY() >= height) {
-                    JOptionPane.showMessageDialog(this, "게임오버: 보스가 화면 아래에 도달");
                     System.exit(0);
                 }
             }
@@ -376,7 +465,6 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
     public static void main(String[] args) {
         CharacterType[] characterOptions = CharacterType.values();
-        // 캐릭터 선택 대화 상자
         CharacterType chosenCharacter = (CharacterType) JOptionPane.showInputDialog(
                 null,
                 "플레이할 캐릭터를 선택하세요:",

@@ -13,7 +13,7 @@ public class StageManager {
     // 각 스테이지별 설정값
     private final int[] enemiesPerStage = {5, 10, 15, 20}; 
     private final int[] bossHealthPerStage = {20, 30, 40, 50}; //스테이지 별 보스 피 
-    private final float[] bossSpeedPerStage = {0.2f, 0.4f, 0.6f, 0.8f}; //스테이지 별 보스 속도
+    private final float[] bossSpeedPerStage = {5, 6, 7, 8, 9, 10}; //스테이지 별 보스 속도
     
     //배경 이미지
     private Image backgroundImage;
