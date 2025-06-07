@@ -5,20 +5,20 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 public class Boss extends Enemy {
     private int health;
     protected int maxHealth;
     private final Color bossColor = Color.RED;
-    BufferedImage bossImage;
+    BufferedImage[] bossImage; //이미지 파일 BufferedImage 객체 배열로 만들어서 애니메이션 효과줌
+    int currentFrame = 0; // 현재 보여줄 프레임 인덱스(0번 프레임)
+    long lastFrameTime = 0; // 마지막으로프레임이 전환된 시간 -> System.currentTImeMillis() 기준 시간 저장
+    int frameDelay = 300; // 프레임 전환 간의 지연 시간 0.3초마다 다음 프레임으로 애니메이션 전환 
     
-    public Boss(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc, String imagePath, int i){
+    public Boss(int x, int y, float delta_x, float delta_y, int max_x, int max_y, float delta_y_inc, int i){
         super(x, y, delta_x, delta_y, max_x, max_y, delta_y_inc);
-        try {
-            bossImage = ImageIO.read(new File("src\\shootingspaceship\\image\\"+imagePath));
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
+        
     }
     public int getHealth() {    // 현재 체력 반환
         return health;
@@ -28,8 +28,21 @@ public class Boss extends Enemy {
         this.maxHealth = health;
     }
     
-    public void setBossImage(Image img) {
-        this.bossImage = (BufferedImage) img;
+    public void setBossImage(String[] imagePath) {
+    	try {
+    		bossImage = new BufferedImage[imagePath.length]; // 외부에서 전달받은 이미지 경로 개수만큼 bufferedImage 배열 생성
+    		for(int i=0;i<imagePath.length;++i) { //각 이미지 돌면서 파일 로드
+    			String fullPath = "/shootingspaceship/image/" + imagePath[i]; 
+    			URL imageURL = getClass().getResource(fullPath);
+    			if(imageURL == null) { // 이미지 파일 존재하지 않는 경우
+    				System.err.println("이미지 파일을 찾을 수 없습니다.");
+    				continue;
+    			}
+    			bossImage[i] = ImageIO.read(imageURL);// 이미지 파일읽어서 BufferedImage 객체로 저장
+    		}
+        } catch(IOException e) {
+        	e.printStackTrace();
+        }
     }
     public Bomb shootBomb() {    // 보스 폭탄 발사 패턴
         return new Bomb((int)x_pos, (int)y_pos + 20, 3);
@@ -37,10 +50,16 @@ public class Boss extends Enemy {
 
     @Override
     public void draw(Graphics g) {    // 보스 및 체력바 그리기
-        if(bossImage != null) {
-            int imgW = bossImage.getWidth();
-            int imgH = bossImage.getHeight();
-            g.drawImage(bossImage, (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null);
+    	
+    	long currentTime = System.currentTimeMillis();
+        if(bossImage != null && bossImage.length > 0) {
+        	if(currentTime - lastFrameTime > frameDelay) { //frameDelay만큼 시간이 지났다면 다음 프레임으로 전환
+			currentFrame = (currentFrame + 1)% bossImage.length; //프레임 인덱스 순환
+			lastFrameTime = currentTime; //마지막 프레임 변경시간 갱신
+        	}
+            int imgW = bossImage[currentFrame].getWidth();
+            int imgH = bossImage[currentFrame].getHeight();
+            g.drawImage(bossImage[currentFrame], (int)(x_pos - imgW/2),(int)(y_pos - imgH /2),null);
             g.setColor(bossColor);
             
             // 체력바 그리기

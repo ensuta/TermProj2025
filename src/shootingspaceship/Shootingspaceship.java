@@ -91,6 +91,8 @@ public class Shootingspaceship extends JPanel implements Runnable {
                 playerMoveRight = false;
                 playerMoveUp = false;
                 playerMoveDown = false;
+                
+                setBackground(Color.black);
             }
         });
         bossThreshold = stageManager.getEnemyCountForStage();
@@ -98,12 +100,7 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
         player = new Player(width / 2, (int) (height * 0.9), playerMargin, width - playerMargin, 0, height - playerMargin, this.selectedCharacter.bulletDamage);
 
-        try {
-            backgroundImg = ImageIO.read(getClass().getResource("/shootingspaceship/Image/gamesky.jpg"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        setBackground(Color.black);
+        
     }
 
     public void start() {
@@ -166,15 +163,9 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
     private void spawnBoss() { // 스테이지에 맞는 보스 생성
         int stage = stageManager.getCurrentStage();
-        String bossImagePath = "missing.png";
-        switch (stage) {
-            case 1: bossImagePath = "shark_128x128.png"; break;
-            case 2: bossImagePath = "crocodiro.png"; break;
-            case 3: bossImagePath = "tung.png"; break;
-            case 4: bossImagePath = "lirili_larila.png"; break;
-            default: bossImagePath = "missing.png"; break;
-        }
-        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, bossImagePath, stage);
+
+        boss = new Boss(width / 2, 50, 0.5f, stageManager.getBossSpeedForStage(), width, height, 0.05f, stage);
+        boss.setBossImage(stageManager.getBossImagePathForStage());
         boss.setHealth(stageManager.getBossHealthForStage());
         bossAppear = true;
     }
@@ -325,13 +316,13 @@ public class Shootingspaceship extends JPanel implements Runnable {
 
         // 플레이어 총알 그리기
         for (int i = 0; i < shots.length; i++) {
-            if (shots[i] != null) { shots[i].drawShot(dbg); }
+            if (shots[i] != null) { shots[i].drawShot(dbg,Color.RED); }
         }
 
         // 적 총알 그리기 및 플레이어 충돌 검사
         for (Enemy enemy : enemies) {
             for (Shot s : enemy.getEnemyShots()) {
-                s.drawShot(dbg);
+                s.drawShot(dbg, Color.YELLOW);
                 if (player.isHitByShot(s)) { // 플레이어가 적 총알에 맞았을 때
                     s.collided();
                     player.decreasehealth(); // 체력 감소

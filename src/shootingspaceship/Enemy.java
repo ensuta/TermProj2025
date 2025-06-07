@@ -102,7 +102,7 @@ public class Enemy {
     public void drawEnemyShots(Graphics g) { //적 총알 화면에 그리는 메소드
         g.setColor(Color.RED); //적 총알 색상 
         for (Shot s : enemyShots) { 
-            s.drawShot(g); //각 총알 그리기
+            s.drawShot(g, Color.YELLOW); //각 총알 그리기
         }
     }
 

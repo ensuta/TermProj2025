@@ -9,13 +9,14 @@ public class Shot {
     private boolean alive;
     private final int radius = 15;
     private int damage = 1; // 기본 데미지
-
+    
     public Shot(int x, int y) {
         x_pos = x;
         y_pos = y;
         alive = true;
     }
 
+    
     
     public Shot(int x, int y, int damage) {
         x_pos = x;
@@ -36,11 +37,11 @@ public class Shot {
         y_pos += speed;
     }
 
-    public void drawShot(Graphics g) {
+    public void drawShot(Graphics g, Color col) {
         if (!alive) {
             return;
         }
-        g.setColor(Color.RED);
+        g.setColor(col);
         g.fillOval(x_pos, y_pos, radius, radius);
     }
 
