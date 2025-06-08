@@ -30,7 +30,9 @@ public class Boss extends Enemy {
     
     public void setBossImage(String[] imagePath) {
     	try {
+    		if(imagePath != null) {
     		bossImage = new BufferedImage[imagePath.length]; // 외부에서 전달받은 이미지 경로 개수만큼 bufferedImage 배열 생성
+    		}
     		for(int i=0;i<imagePath.length;++i) { //각 이미지 돌면서 파일 로드
     			String fullPath = "/shootingspaceship/image/" + imagePath[i]; 
     			URL imageURL = getClass().getResource(fullPath);
